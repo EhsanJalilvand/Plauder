@@ -20,7 +20,6 @@ namespace InfrastructureClient.Services
         private string clientIp = "127.0.0.1";
         private int clientPort = 0;
         private ContactInfo contactInfo=null;
-
         public Action<MessageContract> MessageCallBack { get; set; }
 
         public ClientService(IMessageProvider messageProvider, IOptions<ServerSetting> options)
