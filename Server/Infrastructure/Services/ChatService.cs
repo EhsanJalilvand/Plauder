@@ -1,5 +1,4 @@
-﻿using Application.Dtos;
-using ApplicationShare.Dtos;
+﻿using ApplicationShare.Dtos;
 using ApplicationShare.Settings;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;

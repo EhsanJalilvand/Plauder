@@ -1,5 +1,4 @@
-﻿using Application.Dtos;
-using ApplicationShare.Dtos;
+﻿using ApplicationShare.Dtos;
 using ChatClient.ViewModels;
 using Client.Application.Services;
 using System;

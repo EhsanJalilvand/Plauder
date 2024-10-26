@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Server.Application.Services
+namespace ChatClient.Models
 {
-    public interface IChatService
+    public class MessageModel
     {
-        Task StartService();
+        public string Text { get; set; }
     }
 }

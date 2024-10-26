@@ -1,8 +1,8 @@
-﻿using ApplicationShare.Dtos;
+﻿using Application.Dtos;
+using ApplicationShare.Dtos;
 using ChatClient.Models;
 using Client;
 using Client.Application.Services;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
@@ -14,12 +14,13 @@ using System.Windows.Input;
 
 namespace ChatClient.ViewModels
 {
-    public class MainViewModel : ObservableObject
+    public class MainViewModel : INotifyPropertyChanged
     {
         private MainScreen _mainScreen;
         private readonly IClientService _chatClient;
         private ContactModel _currentContact;
         private string _message;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public MainViewModel(IClientService chatClient)
         {
@@ -64,12 +65,16 @@ namespace ChatClient.ViewModels
         public async void ExecuteSendCommand()
         {
             await _chatClient.SendMessage(CurrentContact.Name, CurrentMessage);
-            CurrentContact.Messages.Add(new MessageModel() { Text=CurrentMessage});
-            CurrentMessage = null;
+            CurrentContact.Messages.Add(CurrentMessage);
+            CurrentMessage = string.Empty;
         }
         public bool CanExecuteSendCommand()
         {
             return CurrentContact != null;
+        }
+        private void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

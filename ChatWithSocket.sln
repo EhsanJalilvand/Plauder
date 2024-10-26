@@ -15,19 +15,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client", "Client", "{99180B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DomainServer", "Server\Domain\DomainServer.csproj", "{282EF737-A3A6-45FC-BA3D-CE20D671D075}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChatClient", "Client\ChatClient\ChatClient.csproj", "{A27670D6-FE9B-4C8E-B221-518AF91F464E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChatClientOld", "Client\ChatClientOld\ChatClientOld.csproj", "{A27670D6-FE9B-4C8E-B221-518AF91F464E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationClient", "Client\Application\ApplicationClient.csproj", "{D2B15EE1-4EE1-4983-BE2E-04BBC9643B0F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationClient", "Client\Application\ApplicationClient.csproj", "{D2B15EE1-4EE1-4983-BE2E-04BBC9643B0F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DomainClient", "Client\Domain\DomainClient.csproj", "{DDF2745C-3730-40B7-B962-5F6387BFFCBD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DomainClient", "Client\Domain\DomainClient.csproj", "{DDF2745C-3730-40B7-B962-5F6387BFFCBD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InfrastructureClient", "Client\Infrastructure\InfrastructureClient.csproj", "{5BAFD51F-33F6-408F-B334-F2795F8E63A1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InfrastructureClient", "Client\Infrastructure\InfrastructureClient.csproj", "{5BAFD51F-33F6-408F-B334-F2795F8E63A1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Share", "Share", "{0CCDEB60-1999-4ED8-BE6B-34E91A9A5C2B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationShare", "Share\Application\ApplicationShare.csproj", "{52B6D787-F9DD-462F-837D-95DFCE79CD4A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationShare", "Share\Application\ApplicationShare.csproj", "{52B6D787-F9DD-462F-837D-95DFCE79CD4A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InfrastructureShare", "Share\Infrastructure\InfrastructureShare.csproj", "{45A19914-C323-4427-8FAF-0BBA22146E4D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InfrastructureShare", "Share\Infrastructure\InfrastructureShare.csproj", "{45A19914-C323-4427-8FAF-0BBA22146E4D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChatClient", "Client\ChatClient\ChatClient.csproj", "{4C1B9A9F-6518-4004-9026-B057C059285D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +77,12 @@ Global
 		{45A19914-C323-4427-8FAF-0BBA22146E4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{45A19914-C323-4427-8FAF-0BBA22146E4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{45A19914-C323-4427-8FAF-0BBA22146E4D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C1B9A9F-6518-4004-9026-B057C059285D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C1B9A9F-6518-4004-9026-B057C059285D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C1B9A9F-6518-4004-9026-B057C059285D}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{4C1B9A9F-6518-4004-9026-B057C059285D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C1B9A9F-6518-4004-9026-B057C059285D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C1B9A9F-6518-4004-9026-B057C059285D}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -90,6 +98,7 @@ Global
 		{5BAFD51F-33F6-408F-B334-F2795F8E63A1} = {99180BCF-579D-4F66-A04A-21620656CAEF}
 		{52B6D787-F9DD-462F-837D-95DFCE79CD4A} = {0CCDEB60-1999-4ED8-BE6B-34E91A9A5C2B}
 		{45A19914-C323-4427-8FAF-0BBA22146E4D} = {0CCDEB60-1999-4ED8-BE6B-34E91A9A5C2B}
+		{4C1B9A9F-6518-4004-9026-B057C059285D} = {99180BCF-579D-4F66-A04A-21620656CAEF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {35CD5AC4-8E97-4BB5-A791-19652F25ED2B}

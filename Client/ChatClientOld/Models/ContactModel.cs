@@ -1,5 +1,4 @@
-﻿using ChatClient.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -9,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace ApplicationShare.Dtos
 {
-    public class ContactModel
+    public class ContactModel : INotifyPropertyChanged
     {
         private string _name;
         private string _ip;
-        private readonly ObservableCollection<MessageModel> _messages = new ObservableCollection<MessageModel>();
+        private readonly ObservableCollection<string> _messages = new ObservableCollection<string>();
         public event PropertyChangedEventHandler? PropertyChanged;
         public string Name
         {
@@ -24,6 +23,7 @@ namespace ApplicationShare.Dtos
             set
             {
                 _name = value;
+                OnPropertyChanged("Name");
             }
         }
         public string Ip
@@ -35,11 +35,16 @@ namespace ApplicationShare.Dtos
             set
             {
                 _ip = value;
+                OnPropertyChanged("Ip");
             }
         }
-        public ObservableCollection<MessageModel> Messages
+        public ObservableCollection<string> Messages
         {
             get { return _messages; }
+        }
+        private void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
