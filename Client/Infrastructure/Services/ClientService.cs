@@ -14,48 +14,45 @@ namespace InfrastructureClient.Services
 {
     public class ClientService : IClientService
     {
-        private readonly IMessageProvider _messageProvider;
-        private readonly ServerSetting _serverSetting;
-        private string clientIp = "127.0.0.1";
-        private int clientPort = 0;
-        private ContactInfo contactInfo=null;
-        public Action<MessageContract> MessageCallBack { get; set; }
-
-        public ClientService(IMessageProvider messageProvider, IOptions<ServerSetting> options)
+        private readonly IClientMessageProvider _messageProvider;
+        public ClientService(IClientMessageProvider messageProvider, IOptions<ServerSetting> options)
         {
             _messageProvider = messageProvider;
-            _serverSetting = options.Value;
-            clientPort = PortHelper.FreeTcpPort();
-            var name = System.Environment.MachineName + ":" + clientPort;
-            contactInfo=new ContactInfo() { Ip = clientIp,Port=clientPort, Name = name };
-            WaitForMessage();
         }
-        public void WaitForMessage()
+
+        public void Start(Action connected, Action<MessageContract> MessageCallBack)
         {
-            Task.Factory.StartNew(async () => {
-               await _messageProvider.RecieveMessageAsync(clientIp, clientPort, (a) =>
+            Task.Factory.StartNew(() =>
+            {
+                _messageProvider.Initialize(async () =>
                 {
-                    MessageCallBack(a);
+                    connected();
+                    await StartRecieveMessage(MessageCallBack);
                 });
             });
-
+        }
+        private async Task StartRecieveMessage(Action<MessageContract> MessageCallBack)
+        {
+            await _messageProvider.ReceiveMessageAsync((a) =>
+            {
+                MessageCallBack(a);
+            });
         }
         public async Task<bool> CloseSession()
         {
-            await _messageProvider.SendMessageAsync(_serverSetting.Ip, _serverSetting.Port, String.Empty, ApplicationShare.Enums.MessageType.Close, contactInfo.Name,"");
+            await _messageProvider.SendMessageAsync(null, String.Empty, ApplicationShare.Enums.MessageType.NotifyOffline);
+            return true;
+        }
+        public async Task<bool> RegisterClient(ContactInfo contactInfo)
+        {
+            await _messageProvider.SendMessageAsync(contactInfo, contactInfo.UserName, ApplicationShare.Enums.MessageType.NotifyOnline);
+            return true;
+        }
+        public async Task<bool> SendMessage(ContactInfo contactInfo, string message)
+        {
+            await _messageProvider.SendMessageAsync(contactInfo, message, ApplicationShare.Enums.MessageType.Message);
             return true;
         }
 
-        public async Task<bool> RegisterClient()
-        {
-            await _messageProvider.SendMessageAsync(_serverSetting.Ip, _serverSetting.Port, String.Empty, ApplicationShare.Enums.MessageType.Register, contactInfo.Name,"");
-            return true;
-        }
-
-        public async Task<bool> SendMessage(string name, string message)
-        {
-            await _messageProvider.SendMessageAsync(_serverSetting.Ip, _serverSetting.Port, message, ApplicationShare.Enums.MessageType.Message,contactInfo.Name,name);
-            return true;
-        }
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Server.Application.Services
 {
-    public interface IChatService
+    public interface IServerService
     {
         Task StartService();
     }

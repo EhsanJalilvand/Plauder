@@ -20,7 +20,6 @@ namespace ChatClient.ViewModels
         private readonly IClientService _chatClient;
         private ContactModel _currentContact;
         private string _message;
-
         public MainViewModel(IClientService chatClient)
         {
             _chatClient = chatClient;
@@ -61,9 +60,10 @@ namespace ChatClient.ViewModels
                 OnPropertyChanged(nameof(CurrentMessage));
             }
         }
+
         public async void ExecuteSendCommand()
         {
-            await _chatClient.SendMessage(CurrentContact.Name, CurrentMessage);
+            await _chatClient.SendMessage(new ContactInfo() { Id=CurrentContact.ID}, CurrentMessage);
             CurrentContact.Messages.Add(new MessageModel() { Text=CurrentMessage});
             CurrentMessage = null;
         }

@@ -13,7 +13,8 @@ namespace Share.Infrastructure
     {
         public static IServiceCollection RegisterSharedServices(this IServiceCollection services)
         {
-            services.AddSingleton<IMessageProvider, MessageProvider>();
+            services.AddSingleton<IServerMessageProvider, ServerMessageProvider>();
+            services.AddSingleton<IClientMessageProvider, ClientMessageProvider>();
             return services;
         }
 

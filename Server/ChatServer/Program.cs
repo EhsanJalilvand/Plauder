@@ -15,12 +15,12 @@ var config=builder.Build();
 
 
 var serviceProvider = new ServiceCollection()
-           .AddSingleton<IChatService, ChatService>()
+           .AddSingleton<IServerService, ServerService>()
            .Configure<ServerSetting>(config.GetSection("Server"))
            .AddMemoryCache()
            .RegisterSharedServices()
            .BuildServiceProvider();
 
 
-var service= serviceProvider.GetService<IChatService>();
+var service= serviceProvider.GetService<IServerService>();
 await service.StartService();

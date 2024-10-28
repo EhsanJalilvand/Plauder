@@ -8,8 +8,7 @@ namespace ApplicationShare.Dtos
 {
     public class ContactInfo
     {
-        public string Name { get; set; }
-        public string Ip { get; set; }
-        public int Port { get; set; }
+        public string Id { get; set; }
+        public string UserName { get; set; }
     }
 }

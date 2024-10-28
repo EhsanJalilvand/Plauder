@@ -12,9 +12,8 @@ namespace ApplicationShare.Dtos
     public class ContactModel
     {
         private string _name;
-        private string _ip;
+        private string _id;
         private readonly ObservableCollection<MessageModel> _messages = new ObservableCollection<MessageModel>();
-        public event PropertyChangedEventHandler? PropertyChanged;
         public string Name
         {
             get
@@ -26,15 +25,15 @@ namespace ApplicationShare.Dtos
                 _name = value;
             }
         }
-        public string Ip
+        public string ID
         {
             get
             {
-                return _ip;
+                return _id;
             }
             set
             {
-                _ip = value;
+                _id = value;
             }
         }
         public ObservableCollection<MessageModel> Messages

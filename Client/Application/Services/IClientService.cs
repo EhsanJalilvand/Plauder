@@ -9,9 +9,11 @@ namespace Client.Application.Services
 {
     public interface IClientService
     {
-        Task<bool> RegisterClient();
+        void Start(Action connected,Action<MessageContract> MessageCallBack);
+        Task<bool> RegisterClient(ContactInfo contactInfo);
         Task<bool> CloseSession();
-        Task<bool> SendMessage(string name,string message);
-        Action<MessageContract> MessageCallBack { get; set; }
+        Task<bool> SendMessage(ContactInfo contactInfo, string message);
+        //Action<MessageContract> MessageCallBack { get; set; }
+        //Action Connected { get; set; }
     }
 }
