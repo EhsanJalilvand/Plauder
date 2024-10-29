@@ -1,6 +1,6 @@
-﻿using ApplicationShare.Settings;
-using ChatClient.ViewModels;
+﻿using ChatClient.ViewModels;
 using Client.Application.Services;
+using DomainShare.Settings;
 using InfrastructureClient.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

@@ -1,4 +1,4 @@
-﻿using ApplicationShare.Dtos;
+﻿using DomainShare.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +13,5 @@ namespace Client.Application.Services
         Task<bool> RegisterClient(ContactInfo contactInfo);
         Task<bool> CloseSession();
         Task<bool> SendMessage(ContactInfo contactInfo, string message);
-        //Action<MessageContract> MessageCallBack { get; set; }
-        //Action Connected { get; set; }
     }
 }

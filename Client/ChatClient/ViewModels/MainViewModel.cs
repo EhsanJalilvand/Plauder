@@ -4,6 +4,7 @@ using Client;
 using Client.Application.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DomainShare.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

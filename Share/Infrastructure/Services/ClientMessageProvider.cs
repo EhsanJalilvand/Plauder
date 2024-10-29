@@ -1,18 +1,19 @@
-﻿using ApplicationShare.Dtos;
-using ApplicationShare.Enums;
-using ApplicationShare.Settings;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Share.Application.Services;
 using System.Net.Sockets;
 using System.Net;
 using System.Text;
+using DomainShare.Settings;
+using DomainShare.Models;
+using DomainShare.Enums;
+using System;
 
 public class ClientMessageProvider : IClientMessageProvider
 {
     private static Socket _socket;
     private readonly ServerSetting _serverSetting;
     private static readonly object _lock = new object();
-
+    private const int ChunkSize = 4;
     public ClientMessageProvider(IOptions<ServerSetting> option)
     {
         _serverSetting = option.Value;
@@ -20,7 +21,7 @@ public class ClientMessageProvider : IClientMessageProvider
     Action ConnectedAction { get; set; }
     public void Initialize(Action connected)
     {
-        ConnectedAction= connected;
+        ConnectedAction = connected;
         if (_socket == null || !_socket.Connected)
         {
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -56,36 +57,89 @@ public class ClientMessageProvider : IClientMessageProvider
         }
     }
 
+    //public async Task ReceiveMessageAsync(Action<MessageContract> callback)
+    //{
+
+    //    StringBuilder data = new StringBuilder();
+    //    bool messageFind = false;
+    //    var buffer = new byte[4];
+    //    while (true)
+    //    {
+    //        try
+    //        {
+    //            int bytesRead = await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
+    //            if (bytesRead == 0) break;
+
+    //            data.Append(Encoding.UTF8.GetString(buffer, 0, bytesRead));
+    //            var messages = data.ToString().Split('\n');
+    //            for (int i = 0; i < messages.Length - 1; i++)
+    //            {
+    //                var message = messages[i].ConvertToObject<MessageContract>();
+    //                if (message != null)
+    //                {
+    //                    messageFind = true;
+    //                    callback(message);
+    //                }
+    //            }
+    //            if (messageFind)
+    //            {
+    //                messageFind = false;
+    //                data.Clear();
+    //            }
+
+    //        }
+    //        catch (SocketException)
+    //        {
+    //            await ReconnectSocketAsync();
+    //        }
+    //        catch (Exception ex)
+    //        {
+    //            // Handle other exceptions if necessary
+    //        }
+    //        finally
+    //        {
+    //        }
+    //    }
+    //}
+
     public async Task ReceiveMessageAsync(Action<MessageContract> callback)
     {
-        byte[] buffer = new byte[1024];
+        var buffer = new byte[ChunkSize];
         var data = new StringBuilder();
 
         while (true)
         {
             try
             {
-                int bytesRead = await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
+                int bytesRead = await _socket.ReceiveAsync(buffer, SocketFlags.None);
                 if (bytesRead == 0) break;
 
                 data.Append(Encoding.UTF8.GetString(buffer, 0, bytesRead));
-                var message = data.ToString().ConvertToObject<MessageContract>();
-                if (message != null)
+
+                while (data.ToString().Contains("<EOF>"))
                 {
-                    data.Clear();
-                    callback(message);
+                    var fullMessage = data.ToString();
+                    var endOfMessageIndex = fullMessage.IndexOf("<EOF>", StringComparison.Ordinal);
+
+                    var messageText = fullMessage.Substring(0, endOfMessageIndex);
+                    data.Remove(0, endOfMessageIndex + "<EOF>".Length);
+
+                    var message = messageText.ConvertToObject<MessageContract>();
+                    if (message != null)
+                    {
+                        callback(message);
+                    }
                 }
             }
             catch (SocketException)
             {
                 await ReconnectSocketAsync();
             }
-            catch (Exception ex)
-            {
-                // Handle other exceptions if necessary
-            }
+
         }
     }
+
+
 
     public async Task<bool> SendMessageAsync(ContactInfo contact, string message, MessageType messageType)
     {
@@ -97,7 +151,7 @@ public class ClientMessageProvider : IClientMessageProvider
         {
             if (!_socket.Connected)
                 await ReconnectSocketAsync();
-
+            
             await _socket.SendAsync(new ArraySegment<byte>(messageSent), SocketFlags.None);
         }
         catch (SocketException)

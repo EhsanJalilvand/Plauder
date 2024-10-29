@@ -1,7 +1,7 @@
-﻿using ApplicationShare.Dtos;
-using ApplicationShare.Helper;
-using ApplicationShare.Settings;
-using Client.Application.Services;
+﻿using Client.Application.Services;
+using DomainShare.Enums;
+using DomainShare.Models;
+using DomainShare.Settings;
 using Microsoft.Extensions.Options;
 using Share.Application.Services;
 using System;
@@ -40,17 +40,17 @@ namespace InfrastructureClient.Services
         }
         public async Task<bool> CloseSession()
         {
-            await _messageProvider.SendMessageAsync(null, String.Empty, ApplicationShare.Enums.MessageType.NotifyOffline);
+            await _messageProvider.SendMessageAsync(null, String.Empty, MessageType.NotifyOffline);
             return true;
         }
         public async Task<bool> RegisterClient(ContactInfo contactInfo)
         {
-            await _messageProvider.SendMessageAsync(contactInfo, contactInfo.UserName, ApplicationShare.Enums.MessageType.NotifyOnline);
+            await _messageProvider.SendMessageAsync(contactInfo, contactInfo.UserName, MessageType.NotifyOnline);
             return true;
         }
         public async Task<bool> SendMessage(ContactInfo contactInfo, string message)
         {
-            await _messageProvider.SendMessageAsync(contactInfo, message, ApplicationShare.Enums.MessageType.Message);
+            await _messageProvider.SendMessageAsync(contactInfo, message, MessageType.Message);
             return true;
         }
 

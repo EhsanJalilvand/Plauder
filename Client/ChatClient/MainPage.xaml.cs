@@ -1,6 +1,8 @@
 ﻿using ApplicationShare.Dtos;
 using ChatClient.ViewModels;
 using Client.Application.Services;
+using DomainShare.Enums;
+using DomainShare.Models;
 
 namespace ChatClient
 {
@@ -33,11 +35,11 @@ namespace ChatClient
         {
             //this.Dispatcher.Dispatch(() =>
             //{
-                if (messageContract.MessageType == ApplicationShare.Enums.MessageType.NotifyOnline && !_mainViewModel.Data.ContactInfos.Any(a => a.ID == messageContract.Sender.Id))
+                if (messageContract.MessageType == MessageType.NotifyOnline && !_mainViewModel.Data.ContactInfos.Any(a => a.ID == messageContract.Sender.Id))
                 _mainViewModel.Data.ContactInfos.Add(new ApplicationShare.Dtos.ContactModel() { ID = messageContract.Sender.Id, Name = messageContract.Sender.UserName });
-            if (messageContract.MessageType == ApplicationShare.Enums.MessageType.NotifyOffline && _mainViewModel.Data.ContactInfos.Any(a => a.ID == messageContract.Sender.Id))
+            if (messageContract.MessageType == MessageType.NotifyOffline && _mainViewModel.Data.ContactInfos.Any(a => a.ID == messageContract.Sender.Id))
                 _mainViewModel.Data.ContactInfos.Remove(_mainViewModel.Data.ContactInfos.First(a => a.ID == messageContract.Sender.Id));
-            if (messageContract.MessageType == ApplicationShare.Enums.MessageType.Message)
+            if (messageContract.MessageType == MessageType.Message)
             {
                 var contact = _mainViewModel.Data.ContactInfos.FirstOrDefault(p => p.ID == messageContract.Sender.Id);
                 contact.Messages.Add(new Models.MessageModel() { Text = messageContract.Message });

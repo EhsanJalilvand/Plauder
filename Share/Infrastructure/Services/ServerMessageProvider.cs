@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using Share.Application.Services;
-using ApplicationShare.Enums;
-using ApplicationShare.Dtos;
 using System.Collections.Concurrent;
-using ApplicationShare.Settings;
 using Microsoft.Extensions.Options;
 using System.Xml.Linq;
 using System.Reflection;
+using DomainShare.Settings;
+using DomainShare.Models;
+using DomainShare.Enums;
 
 namespace Share.Infrastructure.Services
 {
@@ -20,6 +20,7 @@ namespace Share.Infrastructure.Services
     {
         private static ConcurrentDictionary<string, Socket> clients = new ConcurrentDictionary<string, Socket>();
         private readonly ServerSetting _serverSetting;
+        private const int ChunkSize = 4;
         public ServerMessageProvider(IOptions<ServerSetting> option)
         {
             _serverSetting = option.Value;
@@ -135,28 +136,47 @@ namespace Share.Infrastructure.Services
             }
         }
 
+        //public async Task<bool> SendMessageAsync(ContactInfo sender, ContactInfo receiver, string message, MessageType messageType)
+        //{
+        //    if (!clients.TryGetValue(receiver.Id, out var socket))
+        //    {
+        //        return false;
+        //    }
+        //    socket = clients[receiver.Id];
+        //    try
+        //    {
+        //        var localEndPoint = socket.LocalEndPoint as IPEndPoint;
+        //        var standardMessage = new MessageContract() { Sender = sender, Reciever = receiver, Message = message, MessageType = messageType };
+        //        //Using Length-Prefixed Messages
+        //        byte[] messageSent = Encoding.UTF8.GetBytes(standardMessage.ConvertToJson() + "\n");
+        //        await socket.SendAsync(new ArraySegment<byte>(messageSent), SocketFlags.None);
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return false;
+        //    }
+        //    return true;
+        //}
         public async Task<bool> SendMessageAsync(ContactInfo sender, ContactInfo receiver, string message, MessageType messageType)
         {
             if (!clients.TryGetValue(receiver.Id, out var socket))
             {
                 return false;
             }
-            socket = clients[receiver.Id];
-            try
-            {
-                var localEndPoint = socket.LocalEndPoint as IPEndPoint;
-                var standardMessage = new MessageContract() { Sender = sender, Reciever = receiver, Message = message, MessageType = messageType };
-                byte[] messageSent = Encoding.UTF8.GetBytes(standardMessage.ConvertToJson());
-                socket.Send(messageSent);
 
-            }
-            catch (Exception ex)
+            var standardMessage = new MessageContract { Sender = sender, Reciever = receiver, Message = message, MessageType = messageType };
+            var messageText = standardMessage.ConvertToJson() + "<EOF>";
+            byte[] messageBytes = Encoding.UTF8.GetBytes(messageText);
+
+            for (int i = 0; i < messageBytes.Length; i += ChunkSize)
             {
-                return false;
+                int chunkSize = Math.Min(ChunkSize, messageBytes.Length - i);
+                await socket.SendAsync(new ArraySegment<byte>(messageBytes, i, chunkSize), SocketFlags.None);
             }
+
             return true;
         }
-
         public async Task<bool> RemoveClientAsync(ContactInfo sender)
         {
             var socket = clients[sender.Id];

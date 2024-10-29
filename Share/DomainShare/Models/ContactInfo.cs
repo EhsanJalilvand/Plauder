@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ApplicationShare.Dtos
+namespace DomainShare.Models
 {
     public class ContactInfo
     {

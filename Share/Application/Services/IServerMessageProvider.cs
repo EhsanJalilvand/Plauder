@@ -1,5 +1,6 @@
-﻿using ApplicationShare.Dtos;
-using ApplicationShare.Enums;
+﻿
+using DomainShare.Enums;
+using DomainShare.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

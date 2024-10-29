@@ -1,6 +1,6 @@
-﻿using ApplicationShare.Dtos;
-using ApplicationShare.Enums;
-using ApplicationShare.Settings;
+﻿using DomainShare.Enums;
+using DomainShare.Models;
+using DomainShare.Settings;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Server.Application.Services;
@@ -39,7 +39,7 @@ namespace Server.Infrastructure.Services
                 {
                     if (item.Id != contactInfo.Id)
                     {
-                        await _messageProvider.SendMessageAsync(contactInfo, item, "", ApplicationShare.Enums.MessageType.NotifyOnline);
+                        await _messageProvider.SendMessageAsync(contactInfo, item, "", MessageType.NotifyOnline);
                     }
                 }
             }
@@ -59,7 +59,7 @@ namespace Server.Infrastructure.Services
                 _contactInfos.Remove(contract);
                 foreach (var item in _contactInfos)
                 {
-                    await _messageProvider.SendMessageAsync(messageContract.Sender, item, messageContract.Message, ApplicationShare.Enums.MessageType.NotifyOffline);
+                    await _messageProvider.SendMessageAsync(messageContract.Sender, item, messageContract.Message, MessageType.NotifyOffline);
                 }
             }
             return true;
@@ -70,7 +70,7 @@ namespace Server.Infrastructure.Services
             if (contact == null)
                 return false;
 
-            await _messageProvider.SendMessageAsync(messageContract.Sender,contact, messageContract.Message, ApplicationShare.Enums.MessageType.Message);
+            await _messageProvider.SendMessageAsync(messageContract.Sender,contact, messageContract.Message, MessageType.Message);
 
             return true;
         }
@@ -78,11 +78,11 @@ namespace Server.Infrastructure.Services
         {
             _messageProvider.ListenMessageAsync(async (a) =>
             {
-                 if (a.MessageType == ApplicationShare.Enums.MessageType.NotifyOnline)
+                 if (a.MessageType == MessageType.NotifyOnline)
                     await RegisterClient(a);
-                else if (a.MessageType == ApplicationShare.Enums.MessageType.NotifyOffline)
+                else if (a.MessageType == MessageType.NotifyOffline)
                     await RemoveClient(a);
-                else if (a.MessageType == ApplicationShare.Enums.MessageType.Message)
+                else if (a.MessageType == MessageType.Message)
                     await SendMessage(a);
             });
             return Task.CompletedTask;

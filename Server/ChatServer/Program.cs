@@ -1,5 +1,5 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using ApplicationShare.Settings;
+using DomainShare.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

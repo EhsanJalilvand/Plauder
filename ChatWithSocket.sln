@@ -29,6 +29,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InfrastructureShare", "Shar
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChatClient", "Client\ChatClient\ChatClient.csproj", "{4C1B9A9F-6518-4004-9026-B057C059285D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DomainShare", "Share\DomainShare\DomainShare.csproj", "{EE549CDB-5DD6-463A-BB95-DF1F6AFC8FB8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +79,10 @@ Global
 		{4C1B9A9F-6518-4004-9026-B057C059285D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4C1B9A9F-6518-4004-9026-B057C059285D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4C1B9A9F-6518-4004-9026-B057C059285D}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{EE549CDB-5DD6-463A-BB95-DF1F6AFC8FB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE549CDB-5DD6-463A-BB95-DF1F6AFC8FB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE549CDB-5DD6-463A-BB95-DF1F6AFC8FB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE549CDB-5DD6-463A-BB95-DF1F6AFC8FB8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -92,6 +98,7 @@ Global
 		{52B6D787-F9DD-462F-837D-95DFCE79CD4A} = {0CCDEB60-1999-4ED8-BE6B-34E91A9A5C2B}
 		{45A19914-C323-4427-8FAF-0BBA22146E4D} = {0CCDEB60-1999-4ED8-BE6B-34E91A9A5C2B}
 		{4C1B9A9F-6518-4004-9026-B057C059285D} = {99180BCF-579D-4F66-A04A-21620656CAEF}
+		{EE549CDB-5DD6-463A-BB95-DF1F6AFC8FB8} = {0CCDEB60-1999-4ED8-BE6B-34E91A9A5C2B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {35CD5AC4-8E97-4BB5-A791-19652F25ED2B}

@@ -1,5 +1,4 @@
-﻿using ApplicationShare.Settings;
-using ChatClient.ViewModels;
+﻿using ChatClient.ViewModels;
 using Client.Application.Services;
 using InfrastructureClient.Services;
 using Microsoft.Extensions.Configuration;
