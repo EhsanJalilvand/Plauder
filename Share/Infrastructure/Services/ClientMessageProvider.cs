@@ -59,7 +59,7 @@ public class ClientMessageProvider : IClientMessageProvider
     public async Task ReceiveMessageAsync(Action<MessageContract> callback)
     {
         byte[] buffer = new byte[1024];
-        string data = null;
+        var data = new StringBuilder();
 
         while (true)
         {
@@ -68,12 +68,11 @@ public class ClientMessageProvider : IClientMessageProvider
                 int bytesRead = await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
                 if (bytesRead == 0) break;
 
-                data += Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                var message = data.ConvertToObject<MessageContract>();
+                data.Append(Encoding.UTF8.GetString(buffer, 0, bytesRead));
+                var message = data.ToString().ConvertToObject<MessageContract>();
                 if (message != null)
                 {
-                    data = null;
-                    buffer = new byte[1024];
+                    data.Clear();
                     callback(message);
                 }
             }

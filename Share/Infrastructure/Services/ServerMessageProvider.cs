@@ -23,6 +23,42 @@ namespace Share.Infrastructure.Services
         public ServerMessageProvider(IOptions<ServerSetting> option)
         {
             _serverSetting = option.Value;
+            Task.Factory.StartNew(() =>
+            {
+                CloseCorruptedSocket();
+            });
+        }
+        private void CloseCorruptedSocket()
+        {
+            while (true)
+            {
+
+                Parallel.ForEach(clients, client =>
+                {
+                    var socket = client.Value;
+
+                    if (socket == null || !socket.Connected)
+                    {
+                        if (clients.TryRemove(client.Key, out var disconnectedSocket))
+                        {
+                            try
+                            {
+                                disconnectedSocket.Shutdown(SocketShutdown.Both);
+                                disconnectedSocket.Close();
+                            }
+                            catch (SocketException)
+                            {
+
+                            }
+                            finally
+                            {
+
+                            }
+                        }
+                    }
+                });
+                Task.Delay(1000).Wait();
+            }
         }
         public Task ListenMessageAsync(Action<MessageContract> callback)
         {
@@ -76,18 +112,18 @@ namespace Share.Infrastructure.Services
                 while (clients.ContainsKey(clientId))
                 {
                     int numByte = await client.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
-                    if (numByte == 0) break; // کلاینت قطع شده است
+                    if (numByte == 0) break;
 
                     data.Append(Encoding.UTF8.GetString(buffer, 0, numByte));
-                    // پردازش پیام کامل
                     var message = data.ToString().ConvertToObject<MessageContract>();
                     if (message != null)
                     {
                         data.Clear();
-                        message.Sender = new ContactInfo() {Id=clientId };
+                        message.Sender = new ContactInfo() { Id = clientId };
                         callback(message);
                     }
                 }
+                client.Close();
             }
             catch (Exception ex)
             {
@@ -95,23 +131,21 @@ namespace Share.Infrastructure.Services
             }
             finally
             {
-                client.Close();
                 clients.TryRemove(clientId, out _);
             }
         }
 
         public async Task<bool> SendMessageAsync(ContactInfo sender, ContactInfo receiver, string message, MessageType messageType)
         {
-            if (!clients.TryGetValue(receiver.Id, out var socket) || socket == null || !socket.Connected)
+            if (!clients.TryGetValue(receiver.Id, out var socket))
             {
-                clients.TryRemove(receiver.Id, out _);
                 return false;
             }
             socket = clients[receiver.Id];
             try
             {
                 var localEndPoint = socket.LocalEndPoint as IPEndPoint;
-                var standardMessage = new MessageContract() { Sender=sender,Reciever = receiver, Message = message, MessageType = messageType };
+                var standardMessage = new MessageContract() { Sender = sender, Reciever = receiver, Message = message, MessageType = messageType };
                 byte[] messageSent = Encoding.UTF8.GetBytes(standardMessage.ConvertToJson());
                 socket.Send(messageSent);
 
