@@ -20,7 +20,7 @@ namespace ChatClient
         }
         private async void ContentPage_Loaded(object sender, EventArgs e)
         {
-            _chatClient.Start(GetName, RecieveNewMessage);
+            _chatClient.Start(GetName,RecieveNewMessage);
         }
         private void GetName()
         {

@@ -42,7 +42,7 @@ namespace ChatClient
             builder.Services.RegisterSharedServices();
             builder.Services.AddSingleton<MainViewModel>();
             builder.Configuration.GetSection("Server").Bind(serverSetting);
-            builder.Services.Configure<ServerSetting>(option => { option.Ip = serverSetting.Ip; option.Port = serverSetting.Port; });
+            builder.Services.Configure<ServerSetting>(option => { option.Ip = serverSetting.Ip; option.Port = serverSetting.Port;option.ChunkSize = serverSetting.ChunkSize; });
 
 
 

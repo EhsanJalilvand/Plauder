@@ -11,7 +11,9 @@ namespace Share.Application.Services
     public interface IClientMessageProvider
     {
         void Initialize(Action connected);
-        Task ReceiveMessageAsync(Action<MessageContract> callback);
-        Task<bool> SendMessageAsync(ContactInfo contact, string message,MessageType messageType);
+        Task ReceiveMessageAsync();
+        Task<bool> SendMessage(ContactInfo contact, string message, MessageType messageType);
+
+
     }
 }

@@ -9,7 +9,7 @@ namespace Client.Application.Services
 {
     public interface IClientService
     {
-        void Start(Action connected,Action<MessageContract> MessageCallBack);
+        void Start(Action connected,Action<MessageContract> messageCallback);
         Task<bool> RegisterClient(ContactInfo contactInfo);
         Task<bool> CloseSession();
         Task<bool> SendMessage(ContactInfo contactInfo, string message);

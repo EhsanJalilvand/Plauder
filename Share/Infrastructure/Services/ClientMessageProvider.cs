@@ -7,16 +7,21 @@ using DomainShare.Settings;
 using DomainShare.Models;
 using DomainShare.Enums;
 using System;
+using ApplicationShare.Services;
+using System.Text.Json;
 
 public class ClientMessageProvider : IClientMessageProvider
 {
     private static Socket _socket;
     private readonly ServerSetting _serverSetting;
     private static readonly object _lock = new object();
-    private const int ChunkSize = 4;
-    public ClientMessageProvider(IOptions<ServerSetting> option)
+    private readonly IMessageQueueManager _messageQueueManager;
+    private readonly IMessageResolver _messageResolver;
+    public ClientMessageProvider(IOptions<ServerSetting> option, IMessageQueueManager messageQueueManager, IMessageResolver messageResolver)
     {
         _serverSetting = option.Value;
+        _messageQueueManager = messageQueueManager;
+        _messageResolver = messageResolver;
     }
     Action ConnectedAction { get; set; }
     public void Initialize(Action connected)
@@ -26,6 +31,33 @@ public class ClientMessageProvider : IClientMessageProvider
         {
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             TryConnect();
+
+            _messageQueueManager.StartSend(async (a) =>
+            {
+                try
+                {
+                    if (!_socket.Connected)
+                        await ReconnectSocketAsync();
+                    var message = JsonSerializer.Serialize(a) + "<EOF>";
+                    byte[] binaryChunk = Encoding.UTF8.GetBytes(message);
+                    await _socket.SendAsync(new ArraySegment<byte>(binaryChunk), SocketFlags.None);
+                }
+                catch (SocketException)
+                {
+                    await ReconnectSocketAsync();
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    // Handle other exceptions if needed
+                    return false;
+                }
+
+                return true;
+
+
+            });
+
         }
     }
 
@@ -57,54 +89,11 @@ public class ClientMessageProvider : IClientMessageProvider
         }
     }
 
-    //public async Task ReceiveMessageAsync(Action<MessageContract> callback)
-    //{
 
-    //    StringBuilder data = new StringBuilder();
-    //    bool messageFind = false;
-    //    var buffer = new byte[4];
-    //    while (true)
-    //    {
-    //        try
-    //        {
-    //            int bytesRead = await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
-    //            if (bytesRead == 0) break;
-
-    //            data.Append(Encoding.UTF8.GetString(buffer, 0, bytesRead));
-    //            var messages = data.ToString().Split('\n');
-    //            for (int i = 0; i < messages.Length - 1; i++)
-    //            {
-    //                var message = messages[i].ConvertToObject<MessageContract>();
-    //                if (message != null)
-    //                {
-    //                    messageFind = true;
-    //                    callback(message);
-    //                }
-    //            }
-    //            if (messageFind)
-    //            {
-    //                messageFind = false;
-    //                data.Clear();
-    //            }
-
-    //        }
-    //        catch (SocketException)
-    //        {
-    //            await ReconnectSocketAsync();
-    //        }
-    //        catch (Exception ex)
-    //        {
-    //            // Handle other exceptions if necessary
-    //        }
-    //        finally
-    //        {
-    //        }
-    //    }
-    //}
-
-    public async Task ReceiveMessageAsync(Action<MessageContract> callback)
+    public async Task ReceiveMessageAsync()
     {
-        var buffer = new byte[ChunkSize];
+
+        var buffer = new byte[_serverSetting.ChunkSize];
         var data = new StringBuilder();
 
         while (true)
@@ -115,20 +104,13 @@ public class ClientMessageProvider : IClientMessageProvider
                 if (bytesRead == 0) break;
 
                 data.Append(Encoding.UTF8.GetString(buffer, 0, bytesRead));
-
-                while (data.ToString().Contains("<EOF>"))
+                var messageText=data.ToString();
+                var messages = messageText.Split("<EOF>");
+                foreach (var message in messages)
                 {
-                    var fullMessage = data.ToString();
-                    var endOfMessageIndex = fullMessage.IndexOf("<EOF>", StringComparison.Ordinal);
-
-                    var messageText = fullMessage.Substring(0, endOfMessageIndex);
-                    data.Remove(0, endOfMessageIndex + "<EOF>".Length);
-
-                    var message = messageText.ConvertToObject<MessageContract>();
-                    if (message != null)
-                    {
-                        callback(message);
-                    }
+                    if (string.IsNullOrEmpty(message)) continue;
+                    var chunkMessage = message.ConvertToObject<MessageChunk>();
+                    _messageResolver.ReadChunkMessage(chunkMessage);
                 }
             }
             catch (SocketException)
@@ -136,35 +118,16 @@ public class ClientMessageProvider : IClientMessageProvider
                 await ReconnectSocketAsync();
             }
 
+
         }
-    }
+}
 
 
 
-    public async Task<bool> SendMessageAsync(ContactInfo contact, string message, MessageType messageType)
+    public async Task<bool> SendMessage(ContactInfo contact, string message, MessageType messageType)
     {
-
         var standardMessage = new MessageContract() { Reciever = contact, Message = message, MessageType = messageType };
-        byte[] messageSent = Encoding.UTF8.GetBytes(standardMessage.ConvertToJson());
-
-        try
-        {
-            if (!_socket.Connected)
-                await ReconnectSocketAsync();
-            
-            await _socket.SendAsync(new ArraySegment<byte>(messageSent), SocketFlags.None);
-        }
-        catch (SocketException)
-        {
-            await ReconnectSocketAsync();
-            return false;
-        }
-        catch (Exception ex)
-        {
-            // Handle other exceptions if needed
-            return false;
-        }
-
+        _messageQueueManager.PushToQueue(standardMessage);
         return true;
     }
 }

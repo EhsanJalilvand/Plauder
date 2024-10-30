@@ -13,6 +13,9 @@ using System.Reflection;
 using DomainShare.Settings;
 using DomainShare.Models;
 using DomainShare.Enums;
+using ApplicationShare.Services;
+using InfrastructureShare.Services;
+using System.Text.Json;
 
 namespace Share.Infrastructure.Services
 {
@@ -20,14 +23,45 @@ namespace Share.Infrastructure.Services
     {
         private static ConcurrentDictionary<string, Socket> clients = new ConcurrentDictionary<string, Socket>();
         private readonly ServerSetting _serverSetting;
-        private const int ChunkSize = 4;
-        public ServerMessageProvider(IOptions<ServerSetting> option)
+        private readonly IMessageQueueManager _queueManager;
+        private readonly IMessageResolver _messageResolver;
+        public ServerMessageProvider(IOptions<ServerSetting> option, IMessageQueueManager queueManager, IMessageResolver messageResolver)
         {
             _serverSetting = option.Value;
             Task.Factory.StartNew(() =>
             {
                 CloseCorruptedSocket();
             });
+            _queueManager = queueManager;
+            _messageResolver = messageResolver;
+
+
+            _queueManager.StartSend(async (a) =>
+            {
+                try
+                {
+                   var _socket = clients[a.RecieverId];
+                    if (!_socket.Connected)
+                        return false;
+                    var message = JsonSerializer.Serialize(a) + "<EOF>";
+                    byte[] binaryChunk = Encoding.UTF8.GetBytes(message);
+                    await _socket.SendAsync(new ArraySegment<byte>(binaryChunk), SocketFlags.None);
+                }
+                catch (SocketException)
+                {
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    // Handle other exceptions if needed
+                    return false;
+                }
+
+                return true;
+
+
+            });
+
         }
         private void CloseCorruptedSocket()
         {
@@ -71,6 +105,11 @@ namespace Share.Infrastructure.Services
             IPAddress iPaddress = iPHost.AddressList[0];
             IPEndPoint localEndPoint = new IPEndPoint(iPaddress, _serverSetting.Port);
             Socket socket = new Socket(iPaddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            _messageResolver.StartRecieve(async(a) =>
+            {
+                callback(a);
+                return true;
+            });
             try
             {
                 socket.Bind(localEndPoint);
@@ -92,7 +131,7 @@ namespace Share.Infrastructure.Services
                     if (!clients.ContainsKey(clientId))
                     {
                         clients.TryAdd(clientId, clientSocket);
-                        Task.Run(() => HandleClient(clientSocket, clientId, callback));
+                        Task.Run(() => HandleClient(clientSocket, clientId));
                     }
                 }
             }
@@ -103,25 +142,33 @@ namespace Share.Infrastructure.Services
             return Task.CompletedTask;
         }
 
-        private static async Task HandleClient(Socket client, string clientId, Action<MessageContract> callback)
+        private async Task HandleClient(Socket client, string clientId)
         {
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[_serverSetting.ChunkSize];
             StringBuilder data = new StringBuilder();
             try
             {
-
                 while (clients.ContainsKey(clientId))
                 {
-                    int numByte = await client.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
-                    if (numByte == 0) break;
-
-                    data.Append(Encoding.UTF8.GetString(buffer, 0, numByte));
-                    var message = data.ToString().ConvertToObject<MessageContract>();
-                    if (message != null)
+                    try
                     {
-                        data.Clear();
-                        message.Sender = new ContactInfo() { Id = clientId };
-                        callback(message);
+                        int numByte = await client.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
+                        if (numByte == 0) break;
+
+                        data.Append(Encoding.UTF8.GetString(buffer, 0, numByte));
+                        var messageText = data.ToString();
+                        var messages=messageText.Split("<EOF>");
+                        foreach (var message in messages)
+                        {
+                            if(string.IsNullOrEmpty(message)) continue;
+                            var chunkMessage = message.ConvertToObject<MessageChunk>();
+                            chunkMessage.ClientId = clientId;
+                            _messageResolver.ReadChunkMessage(chunkMessage);
+                        }
+                    }
+                    catch (SocketException)
+                    {
+                        break;
                     }
                 }
                 client.Close();
@@ -136,52 +183,23 @@ namespace Share.Infrastructure.Services
             }
         }
 
-        //public async Task<bool> SendMessageAsync(ContactInfo sender, ContactInfo receiver, string message, MessageType messageType)
-        //{
-        //    if (!clients.TryGetValue(receiver.Id, out var socket))
-        //    {
-        //        return false;
-        //    }
-        //    socket = clients[receiver.Id];
-        //    try
-        //    {
-        //        var localEndPoint = socket.LocalEndPoint as IPEndPoint;
-        //        var standardMessage = new MessageContract() { Sender = sender, Reciever = receiver, Message = message, MessageType = messageType };
-        //        //Using Length-Prefixed Messages
-        //        byte[] messageSent = Encoding.UTF8.GetBytes(standardMessage.ConvertToJson() + "\n");
-        //        await socket.SendAsync(new ArraySegment<byte>(messageSent), SocketFlags.None);
 
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return false;
-        //    }
-        //    return true;
-        //}
-        public async Task<bool> SendMessageAsync(ContactInfo sender, ContactInfo receiver, string message, MessageType messageType)
-        {
-            if (!clients.TryGetValue(receiver.Id, out var socket))
-            {
-                return false;
-            }
-
-            var standardMessage = new MessageContract { Sender = sender, Reciever = receiver, Message = message, MessageType = messageType };
-            var messageText = standardMessage.ConvertToJson() + "<EOF>";
-            byte[] messageBytes = Encoding.UTF8.GetBytes(messageText);
-
-            for (int i = 0; i < messageBytes.Length; i += ChunkSize)
-            {
-                int chunkSize = Math.Min(ChunkSize, messageBytes.Length - i);
-                await socket.SendAsync(new ArraySegment<byte>(messageBytes, i, chunkSize), SocketFlags.None);
-            }
-
-            return true;
-        }
         public async Task<bool> RemoveClientAsync(ContactInfo sender)
         {
             var socket = clients[sender.Id];
             socket.Close();
             clients.TryRemove(sender.Id, out _);
+            return true;
+        }
+
+        public async Task<bool> SendMessage(ContactInfo sender, ContactInfo receiver, string message, MessageType messageType)
+        {
+            if (!clients.TryGetValue(receiver.Id, out var socket))
+            {
+                return false;
+            }
+            var standardMessage = new MessageContract { Sender = sender, Reciever = receiver, Message = message, MessageType = messageType };
+            _queueManager.PushToQueue(standardMessage);
             return true;
         }
     }

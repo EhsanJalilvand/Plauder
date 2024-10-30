@@ -13,6 +13,7 @@ namespace Share.Application.Services
     {
         Task ListenMessageAsync(Action<MessageContract> callback);
         Task<bool> RemoveClientAsync(ContactInfo sender);
-        Task<bool> SendMessageAsync(ContactInfo sender, ContactInfo receiver, string message,MessageType messageType);
+        //Task<bool> SendMessageAsync(ContactInfo sender, ContactInfo receiver, string message,MessageType messageType);
+        Task<bool> SendMessage(ContactInfo sender, ContactInfo receiver, string message, MessageType messageType);
     }
 }

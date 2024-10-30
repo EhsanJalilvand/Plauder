@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using ApplicationShare.Services;
+using InfrastructureShare.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Share.Application.Services;
 using Share.Infrastructure.Services;
 using System;
@@ -15,6 +17,9 @@ namespace Share.Infrastructure
         {
             services.AddSingleton<IServerMessageProvider, ServerMessageProvider>();
             services.AddSingleton<IClientMessageProvider, ClientMessageProvider>();
+            services.AddSingleton<IMessageChunker, MessageChunker>();
+            services.AddSingleton<IMessageQueueManager, MessageQueueManager>();
+            services.AddSingleton<IMessageResolver, MessageResolver>();
             return services;
         }
 

@@ -39,7 +39,7 @@ namespace Server.Infrastructure.Services
                 {
                     if (item.Id != contactInfo.Id)
                     {
-                        await _messageProvider.SendMessageAsync(contactInfo, item, "", MessageType.NotifyOnline);
+                        await _messageProvider.SendMessage(contactInfo, item, "", MessageType.NotifyOnline);
                     }
                 }
             }
@@ -59,7 +59,7 @@ namespace Server.Infrastructure.Services
                 _contactInfos.Remove(contract);
                 foreach (var item in _contactInfos)
                 {
-                    await _messageProvider.SendMessageAsync(messageContract.Sender, item, messageContract.Message, MessageType.NotifyOffline);
+                    await _messageProvider.SendMessage(messageContract.Sender, item, messageContract.Message, MessageType.NotifyOffline);
                 }
             }
             return true;
@@ -70,7 +70,7 @@ namespace Server.Infrastructure.Services
             if (contact == null)
                 return false;
 
-            await _messageProvider.SendMessageAsync(messageContract.Sender,contact, messageContract.Message, MessageType.Message);
+            await _messageProvider.SendMessage(messageContract.Sender,contact, messageContract.Message, MessageType.Message);
 
             return true;
         }

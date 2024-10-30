@@ -10,5 +10,6 @@ namespace DomainShare.Settings
     {
         public string Ip { get; set; }
         public int Port { get; set; }
+        public int ChunkSize { get; set; }
     }
 }
