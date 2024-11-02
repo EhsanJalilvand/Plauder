@@ -165,6 +165,7 @@ namespace Share.Infrastructure.Services
                             chunkMessage.ClientId = clientId;
                             _messageResolver.ReadChunkMessage(chunkMessage);
                         }
+                        data.Clear();
                     }
                     catch (SocketException)
                     {

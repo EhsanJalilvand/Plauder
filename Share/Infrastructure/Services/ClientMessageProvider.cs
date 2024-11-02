@@ -112,6 +112,7 @@ public class ClientMessageProvider : IClientMessageProvider
                     var chunkMessage = message.ConvertToObject<MessageChunk>();
                     _messageResolver.ReadChunkMessage(chunkMessage);
                 }
+                data.Clear();
             }
             catch (SocketException)
             {
