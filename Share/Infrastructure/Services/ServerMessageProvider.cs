@@ -157,6 +157,8 @@ namespace Share.Infrastructure.Services
 
                         data.Append(Encoding.UTF8.GetString(buffer, 0, numByte));
                         var messageText = data.ToString();
+                        if(!messageText.EndsWith("<EOF>"))
+                            continue;
                         var messages=messageText.Split("<EOF>");
                         foreach (var message in messages)
                         {
