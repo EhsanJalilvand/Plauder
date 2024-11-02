@@ -9,5 +9,7 @@ namespace ChatClient.Models
     public class MessageModel
     {
         public string Text { get; set; }
+        public bool IsSended { get; set; }
+        public string Time { get; set; }
     }
 }

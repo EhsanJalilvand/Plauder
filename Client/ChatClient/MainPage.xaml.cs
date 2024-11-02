@@ -42,7 +42,7 @@ namespace ChatClient
             if (messageContract.MessageType == MessageType.Message)
             {
                 var contact = _mainViewModel.Data.ContactInfos.FirstOrDefault(p => p.ID == messageContract.Sender.Id);
-                contact.Messages.Add(new Models.MessageModel() { Text = messageContract.Message });
+                contact.Messages.Add(new Models.MessageModel() { Text = messageContract.Message,IsSended=false,Time= DateTime.Now.ToString("HH:mm") });
             }
             //});
         }

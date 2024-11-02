@@ -100,7 +100,7 @@ public class ClientMessageProvider : IClientMessageProvider
         {
             try
             {
-                int bytesRead = await _socket.ReceiveAsync(buffer, SocketFlags.None);
+                int bytesRead = await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
                 if (bytesRead == 0) break;
 
                 data.Append(Encoding.UTF8.GetString(buffer, 0, bytesRead));

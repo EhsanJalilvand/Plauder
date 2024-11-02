@@ -65,7 +65,7 @@ namespace ChatClient.ViewModels
         public async void ExecuteSendCommand()
         {
             await _chatClient.SendMessage(new ContactInfo() { Id=CurrentContact.ID}, CurrentMessage);
-            CurrentContact.Messages.Add(new MessageModel() { Text=CurrentMessage});
+            CurrentContact.Messages.Add(new MessageModel() { Text=CurrentMessage, IsSended = true, Time = DateTime.Now.ToString("HH:mm") });
             CurrentMessage = null;
         }
         public bool CanExecuteSendCommand()

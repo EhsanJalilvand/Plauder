@@ -3,7 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ChatClient.MainPage"
              xmlns:viewModels="clr-namespace:ChatClient.ViewModels"
+             xmlns:converter="clr-namespace:ChatClient.Convertors"
              Loaded="ContentPage_Loaded" Unloaded="ContentPage_Unloaded" >
+    <ContentPage.Resources>
+        <converter:BoolToColorConverter x:Key="boolToColor" />
+        <converter:BoolToLayoutOptionConverter x:Key="boolToLayout" />
+    </ContentPage.Resources>
     <ContentPage.MenuBarItems>
         <MenuBarItem >
             <!--<MenuFlyoutItem Text="Hiiiiii" />-->
@@ -20,8 +25,8 @@
             </CollectionView.ItemsLayout>
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <StackLayout>
-                        <Label Text="{Binding Name}"></Label>
+                    <StackLayout Background="DarkGray">
+                        <Label Text="{Binding Name}" Margin="4"></Label>
                     </StackLayout>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
@@ -37,9 +42,13 @@
                 </CollectionView.ItemsLayout>
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <StackLayout>
-                            <Label Text="{Binding Text}"></Label>
-                        </StackLayout>
+                        <StackLayout >
+                                <StackLayout  Padding="4" BackgroundColor="{Binding IsSended,Converter={StaticResource boolToColor}}" HorizontalOptions="{Binding IsSended,Converter={StaticResource boolToLayout}}">
+                                    <Label FontSize="14" Text="{Binding Text}"  TextColor="Black" ></Label>
+                                    <Label FontSize="10" Text="{Binding Time}" TextColor="White"></Label>
+                                </StackLayout>
+                            </StackLayout>
+
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
