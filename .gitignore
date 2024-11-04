@@ -329,16 +329,8 @@ ASALocalRun/
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
 
-appsettings.json
-appsettings.*.json
-CMS.WebUI.xml
 *.tar
 
-ocelot.*.json
-!ocelot.sample.json
-doc.xml
 
-Sarvin.WebApi.xml
-CMS.WebUI.xml
-SiteAPI.WebUI.xml
-/WebApplication1
+
+

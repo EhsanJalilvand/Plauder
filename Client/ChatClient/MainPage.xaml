@@ -44,8 +44,8 @@
                     <DataTemplate>
                         <StackLayout >
                                 <StackLayout  Padding="4" BackgroundColor="{Binding IsSended,Converter={StaticResource boolToColor}}" HorizontalOptions="{Binding IsSended,Converter={StaticResource boolToLayout}}">
-                                    <Label FontSize="14" Text="{Binding Text}"  TextColor="Black" ></Label>
-                                    <Label FontSize="10" Text="{Binding Time}" TextColor="White"></Label>
+                                    <Label Margin="0,8" FontSize="14" Text="{Binding Text}"  TextColor="Black" ></Label>
+                                <Label Margin="0,8" FontSize="10" Text="{Binding Time}" TextColor="White"></Label>
                                 </StackLayout>
                             </StackLayout>
 

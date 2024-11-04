@@ -25,18 +25,25 @@ namespace InfrastructureClient.Services
 
         public void Start(Action connected, Action<MessageContract> messageCallback)
         {
-            Task.Factory.StartNew(() =>
+            Task.Factory.StartNew(() => InitializeConnection(connected, messageCallback));
+        }
+
+        private void InitializeConnection(Action connected, Action<MessageContract> messageCallback)
+        {
+            _messageProvider.Initialize(async () =>
             {
-                _messageProvider.Initialize(async () =>
-                {
-                    connected();
-                    _messageResolver.StartRecieve(async(a)=> 
-                    {
-                        messageCallback(a);
-                        return true;
-                    });
-                    await _messageProvider.ReceiveMessageAsync();
-                });
+                connected();
+                StartReceivingMessages(messageCallback);
+                await _messageProvider.ReceiveMessageAsync();
+            });
+        }
+
+        private void StartReceivingMessages(Action<MessageContract> messageCallback)
+        {
+            _messageResolver.StartRecieve(async (MessageContract a) =>
+            {
+                messageCallback(a);
+                return true;
             });
         }
 
