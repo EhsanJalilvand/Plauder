@@ -11,7 +11,7 @@ namespace Client.Application.Services
     {
         void Start(Action connected,Action<MessageContract> messageCallback);
         Task<bool> RegisterClient(ContactInfo contactInfo);
-        Task<bool> CloseSession();
+        Task<bool> UnRegisterClient();
         Task<bool> SendMessage(ContactInfo contactInfo, string message);
     }
 }

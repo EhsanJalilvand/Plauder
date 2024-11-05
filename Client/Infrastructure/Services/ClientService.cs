@@ -47,18 +47,24 @@ namespace InfrastructureClient.Services
             });
         }
 
-        public async Task<bool> CloseSession()
+        public async Task<bool> UnRegisterClient()
         {
             await _messageProvider.SendMessage(null, String.Empty, MessageType.NotifyOffline);
             return true;
         }
         public async Task<bool> RegisterClient(ContactInfo contactInfo)
         {
+            if (contactInfo == null || string.IsNullOrEmpty(contactInfo.UserName) || string.IsNullOrEmpty(contactInfo.Id))
+                throw new InvalidOperationException("Contact Is Not Valid");
             await _messageProvider.SendMessage(contactInfo, contactInfo.UserName, MessageType.NotifyOnline);
             return true;
         }
         public async Task<bool> SendMessage(ContactInfo contactInfo, string message)
         {
+            if (contactInfo == null || string.IsNullOrEmpty(contactInfo.Id))
+                throw new InvalidOperationException("Contact Is Not Valid");
+            if (string.IsNullOrEmpty(message))
+                throw new InvalidOperationException("Message Is Null");
             await _messageProvider.SendMessage(contactInfo, message, MessageType.Message);
             return true;
         }

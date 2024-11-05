@@ -48,7 +48,7 @@ namespace ChatClient
         }
         private async void ContentPage_Unloaded(object sender, EventArgs e)
         {
-            await _chatClient.CloseSession();
+            await _chatClient.UnRegisterClient();
         }
     }
 
