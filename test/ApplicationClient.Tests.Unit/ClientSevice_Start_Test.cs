@@ -10,18 +10,18 @@ using Share.Application.Services;
 using Tynamix.ObjectFiller;
 namespace ApplicationClient.Tests.Unit
 {
-    public class ClientSevice_Start_Test
+    public class ClientSevice_Start_Test:IClassFixture<DataFixture>
     {
+        private readonly DataFixture _dataFixture;
         private Mock<IClientMessageProvider> _mockMessageProvider;
         private Mock<IMessageResolver> _mockMessageResolver;
         private readonly IClientService _clientService;
-        public ClientSevice_Start_Test()
+        public ClientSevice_Start_Test(DataFixture dataFixture)
         {
+            _dataFixture = dataFixture;
             _mockMessageProvider = new Mock<IClientMessageProvider>();
             _mockMessageResolver = new Mock<IMessageResolver>();
-            var option = new Mock<IOptions<ServerSetting>>();
-            option.Setup(o => o.Value).Returns(new ServerSetting() { ChunkSize = 1024, Ip = "127.0.0.1", Port = 11213 });
-            _clientService = new ClientService(_mockMessageProvider.Object, option.Object, _mockMessageResolver.Object);
+            _clientService = new ClientService(_mockMessageProvider.Object, dataFixture.ServerSettingOption, _mockMessageResolver.Object);
         }
         [Fact]
         public async Task Start_InvokesConnectedCallback()
