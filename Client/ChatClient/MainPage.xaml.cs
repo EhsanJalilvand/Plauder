@@ -33,8 +33,8 @@ namespace ChatClient
         }
         public async void RecieveNewMessage(MessageContract messageContract)
         {
-            //this.Dispatcher.Dispatch(() =>
-            //{
+            this.Dispatcher.Dispatch(() =>
+            {
                 if (messageContract.MessageType == MessageType.NotifyOnline && !_mainViewModel.Data.ContactInfos.Any(a => a.ID == messageContract.Sender.Id))
                 _mainViewModel.Data.ContactInfos.Add(new ApplicationShare.Dtos.ContactModel() { ID = messageContract.Sender.Id, Name = messageContract.Sender.UserName });
             if (messageContract.MessageType == MessageType.NotifyOffline && _mainViewModel.Data.ContactInfos.Any(a => a.ID == messageContract.Sender.Id))
@@ -44,7 +44,7 @@ namespace ChatClient
                 var contact = _mainViewModel.Data.ContactInfos.FirstOrDefault(p => p.ID == messageContract.Sender.Id);
                 contact.Messages.Add(new Models.MessageModel() { Text = messageContract.Message,IsSended=false,Time= DateTime.Now.ToString("HH:mm") });
             }
-            //});
+            });
         }
         private async void ContentPage_Unloaded(object sender, EventArgs e)
         {
