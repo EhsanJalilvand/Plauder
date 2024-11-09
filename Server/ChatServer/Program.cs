@@ -23,4 +23,4 @@ var serviceProvider = new ServiceCollection()
 
 
 var service= serviceProvider.GetService<IServerService>();
-await service.StartService();
+service.StartService((a) => { });

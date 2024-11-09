@@ -17,18 +17,13 @@ namespace Server.Infrastructure.Services
     public class ServerService : IServerService
     {
         private readonly IServerMessageProvider _messageProvider;
-        private readonly IMemoryCache _memoryCache;
         private readonly ICollection<ContactInfo> _contactInfos = new Collection<ContactInfo>();
-        public ServerService(IServerMessageProvider messageProvider, IOptions<ServerSetting> options, IMemoryCache memoryCache)
+        public ServerService(IServerMessageProvider messageProvider, IOptions<ServerSetting> options)
         {
             _messageProvider = messageProvider;
-            _memoryCache = memoryCache;
         }
         public async Task<bool> RegisterClient(MessageContract messageContract)
         {
-            MessageContract mc = null;
-            if (!_memoryCache.TryGetValue(messageContract.Sender, out mc))
-                _memoryCache.Set(messageContract.Sender, messageContract);
 
             _contactInfos.Add(new ContactInfo() { Id = messageContract.Sender.Id, UserName = messageContract.Message});
 
@@ -48,9 +43,6 @@ namespace Server.Infrastructure.Services
         }
         public async Task<bool> RemoveClient(MessageContract messageContract)
         {
-            MessageContract mc = null;
-            if (_memoryCache.TryGetValue(messageContract.Sender, out mc))
-                _memoryCache.Remove(messageContract.Sender);
 
             await _messageProvider.RemoveClientAsync(messageContract.Sender);
             var contract = _contactInfos.FirstOrDefault(p => p.Id == messageContract.Sender.Id);
@@ -74,18 +66,20 @@ namespace Server.Infrastructure.Services
 
             return true;
         }
-        public Task StartService()
+        public void StartService(Action<bool> callBackResult)
         {
+            bool result=false;
             _messageProvider.ListenMessageAsync(async (a) =>
             {
                  if (a.MessageType == MessageType.NotifyOnline)
-                    await RegisterClient(a);
+                    result= await RegisterClient(a);
                 else if (a.MessageType == MessageType.NotifyOffline)
-                    await RemoveClient(a);
+                    result = await RemoveClient(a);
                 else if (a.MessageType == MessageType.Message)
-                    await SendMessage(a);
+                    result = await SendMessage(a);
+                callBackResult(result);  
             });
-            return Task.CompletedTask;
+           
         }
     }
 }
