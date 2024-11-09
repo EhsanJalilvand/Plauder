@@ -1,4 +1,5 @@
 using ApplicationClient.Tests.Unit;
+using ApplicationShare.Services;
 using DomainShare.Enums;
 using DomainShare.Models;
 using FluentAssertions;
@@ -6,7 +7,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using Server.Application.Services;
 using Server.Infrastructure.Services;
-using Share.Application.Services;
 using Tynamix.ObjectFiller;
 
 namespace ApplicationServer.Tests.Unit

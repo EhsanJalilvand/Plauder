@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
-using Share.Application.Services;
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Options;
 using System.Xml.Linq;
@@ -17,7 +16,8 @@ using ApplicationShare.Services;
 using InfrastructureShare.Services;
 using System.Text.Json;
 
-namespace Share.Infrastructure.Services
+namespace InfrastructureShare.Services
+
 {
     public class ServerMessageProvider : IServerMessageProvider
     {

@@ -1,10 +1,10 @@
-﻿using DomainShare.Enums;
+﻿using ApplicationShare.Services;
+using DomainShare.Enums;
 using DomainShare.Models;
 using DomainShare.Settings;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Server.Application.Services;
-using Share.Application.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

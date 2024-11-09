@@ -6,7 +6,6 @@ using FluentAssertions;
 using InfrastructureClient.Services;
 using Microsoft.Extensions.Options;
 using Moq;
-using Share.Application.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;

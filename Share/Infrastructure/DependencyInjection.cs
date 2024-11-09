@@ -1,8 +1,6 @@
 ﻿using ApplicationShare.Services;
 using InfrastructureShare.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Share.Application.Services;
-using Share.Infrastructure.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
