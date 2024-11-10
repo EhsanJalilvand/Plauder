@@ -57,7 +57,9 @@ namespace ApplicationServer.Tests.Unit
             });
 
             //Act
-            _serverService.StartService((a) => { result = a; });
+            _serverService.StartService((a) => { 
+                result = a;
+            });
             await onReceive.Task;
             //Assert
             result.Should().BeTrue();

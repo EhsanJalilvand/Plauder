@@ -11,5 +11,6 @@ namespace ApplicationShare.Services
     {
         void StartRecieve(Func<MessageContract, Task<bool>> func);
         void ReadChunkMessage(MessageChunk chunk);
+        public long MessageCount { get; }
     }
 }

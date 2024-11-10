@@ -9,13 +9,13 @@ using System.Threading.Tasks;
 using Xunit;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
-namespace ApplicationShare.Tests.Unit.MessageChunkerTests
+namespace ApplicationShare.Tests.Unit
 {
-    public class MessageChunker_ChunckMessage_Test : IClassFixture<DataFixture>
+    public class MessageChunker_Test : IClassFixture<DataFixture>
     {
         private readonly IMessageChunker _messageChunker;
         private readonly DataFixture _dataFixture;
-        public MessageChunker_ChunckMessage_Test(DataFixture dataFixture)
+        public MessageChunker_Test(DataFixture dataFixture)
         {
             _dataFixture = dataFixture;
             _messageChunker = new MessageChunker(dataFixture.ServerSettingOption);

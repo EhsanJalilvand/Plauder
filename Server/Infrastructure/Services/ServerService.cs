@@ -25,9 +25,9 @@ namespace Server.Infrastructure.Services
         public async Task<bool> RegisterClient(MessageContract messageContract)
         {
 
-            _contactInfos.Add(new ContactInfo() { Id = messageContract.Sender.Id, UserName = messageContract.Message});
+            _contactInfos.Add(new ContactInfo() { Id = messageContract.Sender.Id, UserName = messageContract.Message });
 
-
+            var isSended = false;
             foreach (var contactInfo in _contactInfos)
             {
                 foreach (var item in _contactInfos)
@@ -35,51 +35,56 @@ namespace Server.Infrastructure.Services
                     if (item.Id != contactInfo.Id)
                     {
                         await _messageProvider.SendMessage(contactInfo, item, "", MessageType.NotifyOnline);
+                        isSended = true;
                     }
                 }
             }
 
-            return true;
+            return isSended;
         }
         public async Task<bool> RemoveClient(MessageContract messageContract)
         {
 
             await _messageProvider.RemoveClientAsync(messageContract.Sender);
             var contract = _contactInfos.FirstOrDefault(p => p.Id == messageContract.Sender.Id);
+            var isSended = false;
             if (contract != null)
             {
                 _contactInfos.Remove(contract);
                 foreach (var item in _contactInfos)
                 {
                     await _messageProvider.SendMessage(messageContract.Sender, item, messageContract.Message, MessageType.NotifyOffline);
+                    isSended = true;
                 }
             }
-            return true;
+            return isSended;
         }
         public async Task<bool> SendMessage(MessageContract messageContract)
         {
             var contact = _contactInfos.FirstOrDefault(s => s.Id == messageContract.Reciever.Id);
             if (contact == null)
                 return false;
+            var isSended = false;
+            await _messageProvider.SendMessage(messageContract.Sender, contact, messageContract.Message, MessageType.Message);
+            isSended = true;
 
-            await _messageProvider.SendMessage(messageContract.Sender,contact, messageContract.Message, MessageType.Message);
-
-            return true;
+            return isSended;
         }
         public void StartService(Action<bool> callBackResult)
         {
-            bool result=false;
+            bool result = false;
             _messageProvider.ListenMessageAsync(async (a) =>
             {
-                 if (a.MessageType == MessageType.NotifyOnline)
-                    result= await RegisterClient(a);
+                result = false;
+                if (a.MessageType == MessageType.NotifyOnline)
+                    result = await RegisterClient(a);
                 else if (a.MessageType == MessageType.NotifyOffline)
                     result = await RemoveClient(a);
                 else if (a.MessageType == MessageType.Message)
                     result = await SendMessage(a);
-                callBackResult(result);  
+                callBackResult(result);
             });
-           
+
         }
     }
 }

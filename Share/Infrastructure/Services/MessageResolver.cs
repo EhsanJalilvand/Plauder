@@ -17,6 +17,9 @@ namespace InfrastructureShare.Services
         {
             _messageChunker = messageChunker;
         }
+
+        public long MessageCount => _chunkMessages.Count;
+
         public void ReadChunkMessage(MessageChunk chunk)
         {
             _chunkMessages.AddOrUpdate(chunk.MessageId,
@@ -53,6 +56,7 @@ namespace InfrastructureShare.Services
                     {
                         _chunkMessages.TryRemove(key, out _);
                     }
+                    await Task.Delay(100);
                 }
 
             });
