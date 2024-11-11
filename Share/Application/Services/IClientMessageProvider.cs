@@ -10,7 +10,7 @@ namespace ApplicationShare.Services
 {
     public interface IClientMessageProvider
     {
-        void Initialize(Action connected);
+        void StartService(Action connected);
         Task ReceiveMessageAsync();
         Task<bool> SendMessage(ContactInfo contact, string message, MessageType messageType);
 

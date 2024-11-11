@@ -18,6 +18,7 @@ namespace Share.Infrastructure
             services.AddSingleton<IMessageChunker, MessageChunker>();
             services.AddSingleton<IMessageQueueManager, MessageQueueManager>();
             services.AddSingleton<IMessageResolver, MessageResolver>();
+            services.AddSingleton<ISocketProvider, SocketProvider>();
             return services;
         }
 

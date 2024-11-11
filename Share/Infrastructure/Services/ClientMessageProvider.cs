@@ -13,95 +13,61 @@ namespace InfrastructureShare.Services
 {
     public class ClientMessageProvider : IClientMessageProvider
     {
-        private static Socket _socket;
+        private readonly ISocketProvider _socketProvider;
         private readonly ServerSetting _serverSetting;
-        private static readonly object _lock = new object();
         private readonly IMessageQueueManager _messageQueueManager;
         private readonly IMessageResolver _messageResolver;
-        public ClientMessageProvider(IOptions<ServerSetting> option, IMessageQueueManager messageQueueManager, IMessageResolver messageResolver)
+        public ClientMessageProvider(IOptions<ServerSetting> option, IMessageQueueManager messageQueueManager, IMessageResolver messageResolver, ISocketProvider socketProvider)
         {
             _serverSetting = option.Value;
             _messageQueueManager = messageQueueManager;
             _messageResolver = messageResolver;
+            _socketProvider = socketProvider;
         }
-        Action ConnectedAction { get; set; }
-        public void Initialize(Action connected)
+        public void StartService(Action connected)
         {
-            ConnectedAction = connected;
-            if (_socket == null || !_socket.Connected)
+            while (_socketProvider.Socket == null || !_socketProvider.Socket.Connected)
             {
-                _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                TryConnect();
-
-                _messageQueueManager.StartSend(async (a) =>
+                _socketProvider.TryConnect();
+            }
+            connected();
+            _messageQueueManager.StartSend(async (a) =>
+            {
+                try
                 {
-                    try
-                    {
-                        if (!_socket.Connected)
-                            await ReconnectSocketAsync();
-                        var message = JsonSerializer.Serialize(a) + "<EOF>";
-                        byte[] binaryChunk = Encoding.UTF8.GetBytes(message);
-                        await _socket.SendAsync(new ArraySegment<byte>(binaryChunk), SocketFlags.None);
-                    }
-                    catch (SocketException)
-                    {
-                        await ReconnectSocketAsync();
-                        return false;
-                    }
-                    catch (Exception ex)
-                    {
-                        // Handle other exceptions if needed
-                        return false;
-                    }
+                    if (!_socketProvider.Socket.Connected)
+                        await _socketProvider.ReconnectSocketAsync();
+                    var message = JsonSerializer.Serialize(a) + "<EOF>";
+                    byte[] binaryChunk = Encoding.UTF8.GetBytes(message);
+                    await _socketProvider.Socket.SendAsync(new ArraySegment<byte>(binaryChunk), SocketFlags.None);
+                }
+                catch (SocketException)
+                {
+                    await _socketProvider.ReconnectSocketAsync();
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    // Handle other exceptions if needed
+                    return false;
+                }
 
-                    return true;
+                return true;
 
 
-                });
-
-            }
+            });
         }
-
-        private async void TryConnect()
-        {
-            try
-            {
-                _socket.Connect(new IPEndPoint(IPAddress.Parse(_serverSetting.Ip), _serverSetting.Port));
-                ConnectedAction();
-            }
-            catch (SocketException)
-            {
-                await Task.Delay(5000);
-                TryConnect();
-            }
-        }
-
-        private async Task ReconnectSocketAsync()
-        {
-            lock (_lock)
-            {
-                if (_socket != null && _socket.Connected)
-                    return;
-
-                _socket?.Dispose();
-                _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-                TryConnect();
-            }
-        }
-
-
         public async Task ReceiveMessageAsync()
         {
 
             var buffer = new byte[_serverSetting.ChunkSize];
             var data = new StringBuilder();
-
-            while (true)
+            int tryConnectCount = 0;
+            while (tryConnectCount<3)
             {
                 try
                 {
-                    int bytesRead = await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
+                    int bytesRead = await _socketProvider.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
                     if (bytesRead == 0) break;
 
                     data.Append(Encoding.UTF8.GetString(buffer, 0, bytesRead));
@@ -119,15 +85,14 @@ namespace InfrastructureShare.Services
                 }
                 catch (SocketException)
                 {
-                    await ReconnectSocketAsync();
+                    await Task.Delay(1000);
+                    tryConnectCount++;
+                    await _socketProvider.ReconnectSocketAsync();
                 }
 
 
             }
         }
-
-
-
         public async Task<bool> SendMessage(ContactInfo contact, string message, MessageType messageType)
         {
             var standardMessage = new MessageContract() { Reciever = contact, Message = message, MessageType = messageType };

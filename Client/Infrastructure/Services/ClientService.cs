@@ -29,7 +29,7 @@ namespace InfrastructureClient.Services
 
         private void InitializeConnection(Action connected, Action<MessageContract> messageCallback)
         {
-            _messageProvider.Initialize(async () =>
+            _messageProvider.StartService(async () =>
             {
                 connected();
                 StartReceivingMessages(messageCallback);
@@ -53,7 +53,7 @@ namespace InfrastructureClient.Services
         }
         public async Task<bool> RegisterClient(ContactInfo contactInfo)
         {
-            if (contactInfo == null || string.IsNullOrEmpty(contactInfo.UserName) || string.IsNullOrEmpty(contactInfo.Id))
+            if (contactInfo == null || string.IsNullOrEmpty(contactInfo.UserName))
                 throw new InvalidOperationException("Contact Is Not Valid");
             await _messageProvider.SendMessage(contactInfo, contactInfo.UserName, MessageType.NotifyOnline);
             return true;
