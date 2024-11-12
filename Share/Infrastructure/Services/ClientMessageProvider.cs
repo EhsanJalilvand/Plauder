@@ -24,22 +24,23 @@ namespace InfrastructureShare.Services
             _messageResolver = messageResolver;
             _socketProvider = socketProvider;
         }
-        public void StartService(Action connected)
+        public async void StartService(Action connected)
         {
-            while (_socketProvider.Socket == null || !_socketProvider.Socket.Connected)
+            while (!_socketProvider.IsConnected)
             {
-                _socketProvider.TryConnect();
+               await _socketProvider.TryConnect();
+               await Task.Delay(1000);
             }
             connected();
             _messageQueueManager.StartSend(async (a) =>
             {
                 try
                 {
-                    if (!_socketProvider.Socket.Connected)
+                    if (!_socketProvider.IsConnected)
                         await _socketProvider.ReconnectSocketAsync();
                     var message = JsonSerializer.Serialize(a) + "<EOF>";
                     byte[] binaryChunk = Encoding.UTF8.GetBytes(message);
-                    await _socketProvider.Socket.SendAsync(new ArraySegment<byte>(binaryChunk), SocketFlags.None);
+                    await _socketProvider.SendAsync(new ArraySegment<byte>(binaryChunk), SocketFlags.None);
                 }
                 catch (SocketException)
                 {

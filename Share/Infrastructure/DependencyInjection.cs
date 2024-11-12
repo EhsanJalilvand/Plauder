@@ -19,6 +19,7 @@ namespace Share.Infrastructure
             services.AddSingleton<IMessageQueueManager, MessageQueueManager>();
             services.AddSingleton<IMessageResolver, MessageResolver>();
             services.AddSingleton<ISocketProvider, SocketProvider>();
+            services.AddSingleton<ISocketManager, SocketManager>();
             return services;
         }
 

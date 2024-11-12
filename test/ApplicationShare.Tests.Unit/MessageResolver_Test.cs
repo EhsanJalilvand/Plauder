@@ -48,7 +48,7 @@ namespace ApplicationShare.Tests.Unit
             _moqMessageChunker.Setup(a => a.Assemble(It.IsAny<List<MessageChunk>>())).Returns(messageContract);
             //Act
             var chunk = new MessageChunk() { ChunkNumber = 0,MessageId=messageId,Message=Encoding.UTF8.GetBytes("This Is a Test") };
-            _messageResolver.StartRecieve(async (contract) =>
+            _messageResolver.ResolveMessages(async (contract) =>
             {
                 isMessageProcced = contract.Message == messageContract.Message;
                 return true;
@@ -72,7 +72,7 @@ namespace ApplicationShare.Tests.Unit
             _moqMessageChunker.Setup(a => a.Assemble(It.IsAny<List<MessageChunk>>())).Returns(messageContract);
             //Act
             var chunk = new MessageChunk() { ChunkNumber = 0, MessageId = messageId, Message = Encoding.UTF8.GetBytes("This Is a Test") };
-            _messageResolver.StartRecieve(async (contract) =>
+            _messageResolver.ResolveMessages(async (contract) =>
             {
                 isMessageProcced = contract.Message == messageContract.Message;
                 return true;

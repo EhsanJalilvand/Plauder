@@ -16,11 +16,13 @@ namespace ApplicationServer.Tests.Unit
         private readonly DataFixture _dataFixture;
         private readonly IServerService _serverService;
         private readonly Mock<IServerMessageProvider> _moqServerMessageProvider;
+        private readonly Mock<IMessageResolver> _moqMessageRsolver;
         public ServerService_Start_Test(DataFixture dataFixture)
         {
             _dataFixture = dataFixture;
             _moqServerMessageProvider = new Mock<IServerMessageProvider>();
-            _serverService = new ServerService(_moqServerMessageProvider.Object, dataFixture.ServerSettingOption);
+            _moqMessageRsolver = new Mock<IMessageResolver>();
+            _serverService = new ServerService(_moqServerMessageProvider.Object, _moqMessageRsolver.Object);
         }
         [Fact]
         public async void Start_ListenMessage_ShouldWorkProbably()
@@ -28,17 +30,21 @@ namespace ApplicationServer.Tests.Unit
             //Arrange
             var onReceive = new TaskCompletionSource<bool>();
             bool messageRecieved = false;
-            _moqServerMessageProvider.Setup(a => a.ListenMessageAsync(It.IsAny<Action<MessageContract>>())).Callback(() =>
+            var messageContract = new MessageContract { Sender = new ContactInfo { Id = "Id1" }, MessageType = MessageType.NotifyOnline };
+            _moqMessageRsolver.Setup(a => a.ResolveMessages(It.IsAny<Func<MessageContract, Task<bool>>>()))
+                .Callback<Func<MessageContract, Task<bool>>>((f) =>
             {
+                f(messageContract);
                 messageRecieved = true;
                 onReceive.SetResult(true);
             });
 
             //Act
-            _serverService.StartService((a) => {  });
+            _serverService.StartService((a) => { });
             await onReceive.Task;
             //Assert
-            _moqServerMessageProvider.Verify(a => a.ListenMessageAsync(It.IsAny<Action<MessageContract>>()), Times.Once);
+            messageRecieved.Should().BeTrue();
+            //_moqServerMessageProvider.Verify(a => a.ResolveMessageAsync(It.IsAny<Action<MessageContract>>()), Times.Once);
 
         }
         [Fact]
@@ -49,21 +55,24 @@ namespace ApplicationServer.Tests.Unit
             var onReceive = new TaskCompletionSource<bool>();
             var messageContract = new MessageContract { Sender = new ContactInfo { Id = "Id1" }, MessageType = MessageType.NotifyOnline };
             var messageContract2 = new MessageContract { Sender = new ContactInfo { Id = "Id2" }, MessageType = MessageType.NotifyOnline };
-            _moqServerMessageProvider.Setup(a => a.ListenMessageAsync(It.IsAny<Action<MessageContract>>())).Callback<Action<MessageContract>>((message) =>
-            {
-                message(messageContract);
-                message(messageContract2);
-                onReceive.SetResult(true);
-            });
+            _moqServerMessageProvider.Setup(a => a.SendMessageAsync(It.IsAny<ContactInfo>(), It.IsAny<ContactInfo>(), It.IsAny<string>(), MessageType.NotifyOnline)).Returns(Task.FromResult(true));
+            _moqMessageRsolver.Setup(a => a.ResolveMessages(It.IsAny<Func<MessageContract, Task<bool>>>()))
+             .Callback<Func<MessageContract, Task<bool>>>((f) =>
+             {
+                 f(messageContract);
+                 f(messageContract2);
+                 onReceive.SetResult(true);
+             });
 
             //Act
-            _serverService.StartService((a) => { 
+            _serverService.StartService((a) =>
+            {
                 result = a;
             });
             await onReceive.Task;
             //Assert
             result.Should().BeTrue();
-            _moqServerMessageProvider.Verify(mp => mp.SendMessage(It.IsAny<ContactInfo>(), It.IsAny<ContactInfo>(), It.IsAny<string>(), MessageType.NotifyOnline), Times.AtLeastOnce);
+            _moqServerMessageProvider.Verify(mp => mp.SendMessageAsync(It.IsAny<ContactInfo>(), It.IsAny<ContactInfo>(), It.IsAny<string>(), MessageType.NotifyOnline), Times.AtLeastOnce);
 
         }
         [Fact]
@@ -75,11 +84,13 @@ namespace ApplicationServer.Tests.Unit
             var messageContract = new MessageContract { Sender = new ContactInfo { Id = "Id1" }, MessageType = MessageType.NotifyOnline };
             var messageContract2 = new MessageContract { Sender = new ContactInfo { Id = "Id2" }, MessageType = MessageType.NotifyOnline };
             var messageContract3 = new MessageContract { Sender = new ContactInfo { Id = "Id1" }, MessageType = MessageType.NotifyOffline };
-            _moqServerMessageProvider.Setup(a => a.ListenMessageAsync(It.IsAny<Action<MessageContract>>())).Callback<Action<MessageContract>>((message) =>
+            _moqServerMessageProvider.Setup(a => a.SendMessageAsync(It.IsAny<ContactInfo>(), It.IsAny<ContactInfo>(), It.IsAny<string>(), MessageType.NotifyOffline)).Returns(Task.FromResult(true));
+            _moqMessageRsolver.Setup(a => a.ResolveMessages(It.IsAny<Func<MessageContract, Task<bool>>>()))
+            .Callback<Func<MessageContract, Task<bool>>>((f) =>
             {
-                message(messageContract);
-                message(messageContract2);
-                message(messageContract3);
+                f(messageContract);
+                f(messageContract2);
+                f(messageContract3);
                 onReceive.SetResult(true);
             });
 
@@ -88,8 +99,8 @@ namespace ApplicationServer.Tests.Unit
             await onReceive.Task;
             //Assert
             result.Should().BeTrue();
-            _moqServerMessageProvider.Verify(mp => mp.SendMessage(It.IsAny<ContactInfo>(), It.IsAny<ContactInfo>(), It.IsAny<string>(), MessageType.NotifyOffline), Times.AtLeastOnce);
-            _moqServerMessageProvider.Verify(mp => mp.RemoveClientAsync(It.IsAny<ContactInfo>()), Times.Once);
+            _moqServerMessageProvider.Verify(mp => mp.SendMessageAsync(It.IsAny<ContactInfo>(), It.IsAny<ContactInfo>(), It.IsAny<string>(), MessageType.NotifyOffline), Times.AtLeastOnce);
+            _moqServerMessageProvider.Verify(mp => mp.RemoveClientSession(It.IsAny<ContactInfo>()), Times.Once);
 
         }
         [Fact]
@@ -99,11 +110,16 @@ namespace ApplicationServer.Tests.Unit
             bool result = false;
             var onReceive = new TaskCompletionSource<bool>();
             var messageContract = new MessageContract { Sender = new ContactInfo { Id = "Id1" }, MessageType = MessageType.NotifyOnline };
-            var messageContract2 = new MessageContract { Sender = new ContactInfo { Id = "Id2" }, Reciever = new ContactInfo { Id = "Id1" }, Message = "Sample", MessageType = MessageType.Message };
-            _moqServerMessageProvider.Setup(a => a.ListenMessageAsync(It.IsAny<Action<MessageContract>>())).Callback<Action<MessageContract>>((message) =>
+            var messageContract2 = new MessageContract { Sender = new ContactInfo { Id = "Id2" }, MessageType = MessageType.NotifyOnline };
+            var messageContract3 = new MessageContract { Sender = new ContactInfo { Id = "Id2" }, Reciever = new ContactInfo { Id = "Id1" }, Message = "Sample", MessageType = MessageType.Message };
+            _moqServerMessageProvider.Setup(a => a.SendMessageAsync(It.IsAny<ContactInfo>(), It.IsAny<ContactInfo>(), It.IsAny<string>(), MessageType.Message)).Returns(Task.FromResult(true));
+
+            _moqMessageRsolver.Setup(a => a.ResolveMessages(It.IsAny<Func<MessageContract, Task<bool>>>()))
+            .Callback<Func<MessageContract, Task<bool>>>((f) =>
             {
-                message(messageContract);
-                message(messageContract2);
+                f(messageContract);
+                f(messageContract2);
+                f(messageContract3);
                 onReceive.SetResult(true);
             });
 
@@ -112,7 +128,7 @@ namespace ApplicationServer.Tests.Unit
             await onReceive.Task;
             //Assert
             result.Should().BeTrue();
-            _moqServerMessageProvider.Verify(mp => mp.SendMessage(It.IsAny<ContactInfo>(), It.IsAny<ContactInfo>(), It.IsAny<string>(), MessageType.Message), Times.AtLeastOnce);
+            _moqServerMessageProvider.Verify(mp => mp.SendMessageAsync(It.IsAny<ContactInfo>(), It.IsAny<ContactInfo>(), It.IsAny<string>(), MessageType.Message), Times.AtLeastOnce);
 
         }
 
@@ -125,10 +141,16 @@ namespace ApplicationServer.Tests.Unit
             //Arrange
             bool result = false;
             var onReceive = new TaskCompletionSource<bool>();
-            var messageContract = new MessageContract { Sender = new ContactInfo { Id = string.Empty }, MessageType = MessageType.NotifyOnline };
-            _moqServerMessageProvider.Setup(a => a.ListenMessageAsync(It.IsAny<Action<MessageContract>>())).Callback<Action<MessageContract>>((message) =>
+            var messageContract = new MessageContract { Sender = new ContactInfo { Id = "Id1" }, MessageType = MessageType.NotifyOnline };
+            var messageContract2 = new MessageContract { Sender = new ContactInfo { Id = "Id2" }, MessageType = MessageType.NotifyOnline };
+
+
+            _moqServerMessageProvider.Setup(a => a.SendMessageAsync(It.IsAny<ContactInfo>(), It.IsAny<ContactInfo>(), It.IsAny<string>(), MessageType.NotifyOnline)).Returns(Task.FromResult(false));
+            _moqMessageRsolver.Setup(a => a.ResolveMessages(It.IsAny<Func<MessageContract, Task<bool>>>()))
+            .Callback<Func<MessageContract, Task<bool>>>((f) =>
             {
-                message(messageContract);
+                f(messageContract);
+                f(messageContract2);
                 onReceive.SetResult(true);
             });
 
@@ -148,10 +170,16 @@ namespace ApplicationServer.Tests.Unit
             //Arrange
             bool result = false;
             var onReceive = new TaskCompletionSource<bool>();
-            var messageContract = new MessageContract { Sender = new ContactInfo { Id = string.Empty }, MessageType = MessageType.NotifyOffline };
-            _moqServerMessageProvider.Setup(a => a.ListenMessageAsync(It.IsAny<Action<MessageContract>>())).Callback<Action<MessageContract>>((message) =>
+            var messageContract = new MessageContract { Sender = new ContactInfo { Id = "Id1" }, MessageType = MessageType.NotifyOnline };
+            var messageContract2 = new MessageContract { Sender = new ContactInfo { Id = "Id2" }, MessageType = MessageType.NotifyOnline };
+            var messageContract3 = new MessageContract { Sender = new ContactInfo { Id = "Id2" }, MessageType = MessageType.NotifyOffline };
+            _moqServerMessageProvider.Setup(a => a.SendMessageAsync(It.IsAny<ContactInfo>(), It.IsAny<ContactInfo>(), It.IsAny<string>(), MessageType.NotifyOffline)).Returns(Task.FromResult(false));
+            _moqMessageRsolver.Setup(a => a.ResolveMessages(It.IsAny<Func<MessageContract, Task<bool>>>()))
+            .Callback<Func<MessageContract, Task<bool>>>((f) =>
             {
-                message(messageContract);
+                f(messageContract);
+                f(messageContract2);
+                f(messageContract3);
                 onReceive.SetResult(true);
             });
 
@@ -168,10 +196,16 @@ namespace ApplicationServer.Tests.Unit
             //Arrange
             bool result = false;
             var onReceive = new TaskCompletionSource<bool>();
-            var messageContract = new MessageContract { Sender = new ContactInfo { Id = "Id2" }, Reciever = new ContactInfo { Id = "Id1" }, Message = string.Empty, MessageType = MessageType.Message };
-            _moqServerMessageProvider.Setup(a => a.ListenMessageAsync(It.IsAny<Action<MessageContract>>())).Callback<Action<MessageContract>>((message) =>
+            var messageContract1 = new MessageContract { Sender = new ContactInfo { Id = "Id1" }, Reciever = new ContactInfo { Id = "Id1" }, Message = string.Empty, MessageType = MessageType.NotifyOnline };
+            var messageContract2 = new MessageContract { Sender = new ContactInfo { Id = "Id2" }, Reciever = new ContactInfo { Id = "Id1" }, Message = string.Empty, MessageType = MessageType.NotifyOnline };
+            var messageContract3 = new MessageContract { Sender = new ContactInfo { Id = "" }, Reciever = new ContactInfo { Id = "Id1" }, Message = string.Empty, MessageType = MessageType.Message };
+            _moqServerMessageProvider.Setup(a => a.SendMessageAsync(It.IsAny<ContactInfo>(), It.IsAny<ContactInfo>(), It.IsAny<string>(), MessageType.Message)).Returns(Task.FromResult(false));
+            _moqMessageRsolver.Setup(a => a.ResolveMessages(It.IsAny<Func<MessageContract, Task<bool>>>()))
+            .Callback<Func<MessageContract, Task<bool>>>((f) =>
             {
-                message(messageContract);
+                f(messageContract1);
+                f(messageContract2);
+                f(messageContract3);
                 onReceive.SetResult(true);
             });
 

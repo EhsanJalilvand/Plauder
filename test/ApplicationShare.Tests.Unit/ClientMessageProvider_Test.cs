@@ -103,9 +103,31 @@ namespace ApplicationShare.Tests.Unit
             _moqSocketProvider.Verify(a => a.ReconnectSocketAsync(), Times.Exactly(3));
         }
         [Fact]
-        public void StartService_ShouldSendMessageInQueue()
+        public async void StartService_ShouldSendQueueMessages_WhenSocketIsConnect()
         {
-
+            //Arrang
+            bool isConnected = false;
+            var messageCallbackInvoked = new TaskCompletionSource<bool>();
+            var messageChunk = new MessageChunk() {ChunkNumber=0,ClientId="Id01",Message=Encoding.UTF8.GetBytes("Test"),MessageId=Guid.NewGuid() };
+            var messageChunk2 = new MessageChunk() { ChunkNumber = 0, ClientId = "Id02", Message = Encoding.UTF8.GetBytes("Test"), MessageId = Guid.NewGuid() };
+            _moqSocketProvider.Setup(a=>a.IsConnected).Returns(true);
+            _moqQueueMessageManager.Setup(a => a.StartSend(It.IsAny<Func<MessageChunk, Task<bool>>>()))
+                .Callback<Func<MessageChunk, Task<bool>>>(async (f) =>
+            {
+                await f(messageChunk);
+                await f(messageChunk2);
+                messageCallbackInvoked.SetResult(true);
+            });
+            //Act
+            _clientMessageProvider.StartService(() =>
+            {
+                isConnected = true;
+            });
+            await messageCallbackInvoked.Task;
+            //Assert
+            isConnected.Should().BeTrue();
+            _moqSocketProvider.Verify(a => a.SendAsync(It.IsAny<ArraySegment<byte>>(),SocketFlags.None), Times.Exactly(2));
         }
+
     }
 }

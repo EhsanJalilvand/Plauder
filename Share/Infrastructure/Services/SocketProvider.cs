@@ -23,10 +23,7 @@ namespace InfrastructureShare.Services
             _serverSetting = options.Value;
         }
         public Socket Socket => _socket;
-        public async Task<int> ReceiveAsync(ArraySegment<byte> buffer, SocketFlags socketFlags)
-        {
-            return await _socket.ReceiveAsync(buffer, socketFlags);
-        }
+        public bool IsConnected =>_socket!=null && _socket.Connected;
         public async Task<bool> TryConnect()
         {
             try
@@ -40,7 +37,6 @@ namespace InfrastructureShare.Services
             }
             return true;
         }
-
         public async Task ReconnectSocketAsync()
         {
             lock (_lock)
@@ -54,5 +50,48 @@ namespace InfrastructureShare.Services
                 TryConnect();
             }
         }
+        public async Task<int> ReceiveAsync(ArraySegment<byte> buffer, SocketFlags socketFlags)
+        {
+            return await _socket.ReceiveAsync(buffer, socketFlags);
+        }
+        public async Task<int> SendAsync(ArraySegment<byte> buffer, SocketFlags socketFlags)
+        {
+            return await SendAsync(_socket,buffer, socketFlags);
+        }
+        public async Task<int> SendAsync(Socket socket, ArraySegment<byte> buffer, SocketFlags socketFlags)
+        {
+            return await socket.SendAsync(buffer, socketFlags);
+        }
+        public Task ListenAsync(Action<Socket, string> clientSocket)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                IPHostEntry iPHost = Dns.GetHostEntry(_serverSetting.Ip);
+                IPAddress iPaddress = iPHost.AddressList[0];
+                IPEndPoint localEndPoint = new IPEndPoint(iPaddress, _serverSetting.Port);
+                //Socket socket = new Socket(iPaddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+                Socket.Bind(localEndPoint);
+                // Using Listen() method we create 
+                // the Client list that will want
+                // to connect to Server
+                Socket.Listen(10);
+                while (true)
+                {
+                    // Suspend while waiting for
+                    // incoming connection Using 
+                    // Accept() method the server 
+                    // will accept connection of client
+                    Socket acceptedSocket = Socket.Accept();
+                    IPEndPoint remoteEndPoint = acceptedSocket.RemoteEndPoint as IPEndPoint;
+                    string clientIP = remoteEndPoint?.Address.ToString();
+                    int clientPort = remoteEndPoint?.Port ?? 0;
+                    string clientId = $"{clientIP}:{clientPort}";
+                    clientSocket(acceptedSocket, clientId);
+                }
+            });
+        }
+
+
     }
 }

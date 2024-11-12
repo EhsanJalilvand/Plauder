@@ -11,9 +11,9 @@ namespace ApplicationShare.Services
 {
     public interface IServerMessageProvider
     {
-        Task ListenMessageAsync(Action<MessageContract> callback);
-        Task<bool> RemoveClientAsync(ContactInfo sender);
-        //Task<bool> SendMessageAsync(ContactInfo sender, ContactInfo receiver, string message,MessageType messageType);
-        Task<bool> SendMessage(ContactInfo sender, ContactInfo receiver, string message, MessageType messageType);
+        void SendQueueMessagesToClients();
+        Task ListenMessageAsync();
+        Task<bool> RemoveClientSession(ContactInfo sender);
+        Task<bool> SendMessageAsync(ContactInfo sender, ContactInfo receiver, string message, MessageType messageType);
     }
 }

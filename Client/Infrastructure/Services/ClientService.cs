@@ -39,7 +39,7 @@ namespace InfrastructureClient.Services
 
         private void StartReceivingMessages(Action<MessageContract> messageCallback)
         {
-            _messageResolver.StartRecieve(async (MessageContract a) =>
+            _messageResolver.ResolveMessages(async (MessageContract a) =>
             {
                 messageCallback(a);
                 return true;

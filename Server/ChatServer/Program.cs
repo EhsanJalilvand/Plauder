@@ -24,3 +24,4 @@ var serviceProvider = new ServiceCollection()
 
 var service= serviceProvider.GetService<IServerService>();
 service.StartService((a) => { });
+service.KeepLive();

@@ -9,7 +9,7 @@ namespace ApplicationShare.Services
 {
     public interface IMessageResolver
     {
-        void StartRecieve(Func<MessageContract, Task<bool>> func);
+        void ResolveMessages(Func<MessageContract, Task<bool>> func);
         void ReadChunkMessage(MessageChunk chunk);
         public long MessageCount { get; }
     }

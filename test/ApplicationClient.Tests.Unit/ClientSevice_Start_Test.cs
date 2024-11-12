@@ -42,7 +42,7 @@ namespace ApplicationClient.Tests.Unit
 
 
 
-            _mockMessageResolver.Setup(mr => mr.StartRecieve(It.IsAny<Func<MessageContract, Task<bool>>>()))
+            _mockMessageResolver.Setup(mr => mr.ResolveMessages(It.IsAny<Func<MessageContract, Task<bool>>>()))
                                 .Callback<Func<MessageContract, Task<bool>>>(async callback =>
                                 {
                                     await callback(messageContract);
@@ -61,7 +61,7 @@ namespace ApplicationClient.Tests.Unit
             //Assert
 
             _mockMessageProvider.Verify(mp => mp.StartService(It.IsAny<Action>()), Times.Once);
-            _mockMessageResolver.Verify(mr => mr.StartRecieve(It.IsAny<Func<MessageContract, Task<bool>>>()), Times.Once);
+            _mockMessageResolver.Verify(mr => mr.ResolveMessages(It.IsAny<Func<MessageContract, Task<bool>>>()), Times.Once);
             _mockMessageProvider.Verify(mp => mp.ReceiveMessageAsync(), Times.Once);
             connected.Should().BeTrue();
             isMessageRecieve.Should().BeTrue();
@@ -93,7 +93,7 @@ namespace ApplicationClient.Tests.Unit
                 onConnect();
                 onConnectCallback.SetResult(true);
             });
-            _mockMessageResolver.Setup(a => a.StartRecieve(It.IsAny<Func<MessageContract, Task<bool>>>())).Throws(new Exception("StartRecieve Failed"));
+            _mockMessageResolver.Setup(a => a.ResolveMessages(It.IsAny<Func<MessageContract, Task<bool>>>())).Throws(new Exception("StartRecieve Failed"));
             //Act
             _clientService.Start(() => { }, (messageContract) => {
                 messageRecieved = true;

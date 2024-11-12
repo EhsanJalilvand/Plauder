@@ -32,9 +32,9 @@ namespace InfrastructureShare.Services
 
         }
 
-        public void StartRecieve(Func<MessageContract, Task<bool>> func)
+        public void ResolveMessages(Func<MessageContract, Task<bool>> func)
         {
-            Task.Factory.StartNew(async () =>
+            Task.Factory.StartNew(async() =>
             {
                 while (true)
                 {
@@ -58,7 +58,6 @@ namespace InfrastructureShare.Services
                     }
                     await Task.Delay(100);
                 }
-
             });
         }
     }

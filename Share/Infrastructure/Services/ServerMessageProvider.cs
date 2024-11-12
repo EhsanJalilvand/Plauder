@@ -21,31 +21,31 @@ namespace InfrastructureShare.Services
 {
     public class ServerMessageProvider : IServerMessageProvider
     {
-        private static ConcurrentDictionary<string, Socket> clients = new ConcurrentDictionary<string, Socket>();
         private readonly ServerSetting _serverSetting;
         private readonly IMessageQueueManager _queueManager;
         private readonly IMessageResolver _messageResolver;
-        public ServerMessageProvider(IOptions<ServerSetting> option, IMessageQueueManager queueManager, IMessageResolver messageResolver)
+        private readonly ISocketProvider _socketProvider;
+        private readonly ISocketManager _socketManager;
+        public ServerMessageProvider(IOptions<ServerSetting> option, IMessageQueueManager queueManager, IMessageResolver messageResolver, ISocketProvider socketProvider, ISocketManager socketManager)
         {
             _serverSetting = option.Value;
-            Task.Factory.StartNew(() =>
-            {
-                CloseCorruptedSocket();
-            });
             _queueManager = queueManager;
             _messageResolver = messageResolver;
-
-
+            _socketProvider = socketProvider;
+            _socketManager = socketManager;
+        }
+        public void SendQueueMessagesToClients()
+        {
             _queueManager.StartSend(async (a) =>
             {
                 try
                 {
-                   var _socket = clients[a.RecieverId];
-                    if (!_socket.Connected)
+                    if (!_socketManager.TrySocket(a.RecieverId))
                         return false;
                     var message = JsonSerializer.Serialize(a) + "<EOF>";
                     byte[] binaryChunk = Encoding.UTF8.GetBytes(message);
-                    await _socket.SendAsync(new ArraySegment<byte>(binaryChunk), SocketFlags.None);
+                    var socket = _socketManager.FindSocket(a.RecieverId);
+                    await _socketProvider.SendAsync(socket, new ArraySegment<byte>(binaryChunk), SocketFlags.None);
                 }
                 catch (SocketException)
                 {
@@ -61,94 +61,24 @@ namespace InfrastructureShare.Services
 
 
             });
-
         }
-        private void CloseCorruptedSocket()
+        public Task ListenMessageAsync()
         {
-            while (true)
+            _socketProvider.ListenAsync((clientSocket, clientId) =>
             {
 
-                Parallel.ForEach(clients, client =>
-                {
-                    var socket = client.Value;
-
-                    if (socket == null || !socket.Connected)
-                    {
-                        if (clients.TryRemove(client.Key, out var disconnectedSocket))
-                        {
-                            try
-                            {
-                                disconnectedSocket.Shutdown(SocketShutdown.Both);
-                                disconnectedSocket.Close();
-                            }
-                            catch (SocketException)
-                            {
-
-                            }
-                            finally
-                            {
-
-                            }
-                        }
-                    }
-                });
-                Task.Delay(1000).Wait();
-            }
-        }
-        public Task ListenMessageAsync(Action<MessageContract> callback)
-        {
-            // Establish the local endpoint 
-            // for the socket. Dns.GetHostName
-            // returns the name of the host 
-            // running the application.
-            IPHostEntry iPHost = Dns.GetHostEntry(_serverSetting.Ip);
-            IPAddress iPaddress = iPHost.AddressList[0];
-            IPEndPoint localEndPoint = new IPEndPoint(iPaddress, _serverSetting.Port);
-            Socket socket = new Socket(iPaddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            _messageResolver.StartRecieve(async(a) =>
-            {
-                callback(a);
-                return true;
+               if(_socketManager.AddSocket(clientSocket, clientId));
+                Task.Run(() => HandleClient(clientSocket, clientId));
             });
-            try
-            {
-                socket.Bind(localEndPoint);
-                // Using Listen() method we create 
-                // the Client list that will want
-                // to connect to Server
-                socket.Listen(10);
-                while (true)
-                {
-                    // Suspend while waiting for
-                    // incoming connection Using 
-                    // Accept() method the server 
-                    // will accept connection of client
-                    Socket clientSocket = socket.Accept();
-                    IPEndPoint remoteEndPoint = clientSocket.RemoteEndPoint as IPEndPoint;
-                    string clientIP = remoteEndPoint?.Address.ToString();
-                    int clientPort = remoteEndPoint?.Port ?? 0;
-                    string clientId = $"{clientIP}:{clientPort}";
-                    if (!clients.ContainsKey(clientId))
-                    {
-                        clients.TryAdd(clientId, clientSocket);
-                        Task.Run(() => HandleClient(clientSocket, clientId));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-
-            }
             return Task.CompletedTask;
         }
-
         private async Task HandleClient(Socket client, string clientId)
         {
             byte[] buffer = new byte[_serverSetting.ChunkSize];
             StringBuilder data = new StringBuilder();
             try
             {
-                while (clients.ContainsKey(clientId))
+                while (_socketManager.IsExist(clientId))
                 {
                     try
                     {
@@ -157,12 +87,12 @@ namespace InfrastructureShare.Services
 
                         data.Append(Encoding.UTF8.GetString(buffer, 0, numByte));
                         var messageText = data.ToString();
-                        if(!messageText.EndsWith("<EOF>"))
+                        if (!messageText.EndsWith("<EOF>"))
                             continue;
-                        var messages=messageText.Split("<EOF>");
+                        var messages = messageText.Split("<EOF>");
                         foreach (var message in messages)
                         {
-                            if(string.IsNullOrEmpty(message)) continue;
+                            if (string.IsNullOrEmpty(message)) continue;
                             var chunkMessage = message.ConvertToObject<MessageChunk>();
                             chunkMessage.ClientId = clientId;
                             _messageResolver.ReadChunkMessage(chunkMessage);
@@ -182,22 +112,16 @@ namespace InfrastructureShare.Services
             }
             finally
             {
-                clients.TryRemove(clientId, out _);
+                _socketManager.RemoveSocket(clientId);
             }
         }
-
-
-        public async Task<bool> RemoveClientAsync(ContactInfo sender)
+        public async Task<bool> RemoveClientSession(ContactInfo sender)
         {
-            var socket = clients[sender.Id];
-            socket.Close();
-            clients.TryRemove(sender.Id, out _);
-            return true;
+            return _socketManager.RemoveSocket(sender.Id);
         }
-
-        public async Task<bool> SendMessage(ContactInfo sender, ContactInfo receiver, string message, MessageType messageType)
+        public async Task<bool> SendMessageAsync(ContactInfo sender, ContactInfo receiver, string message, MessageType messageType)
         {
-            if (!clients.TryGetValue(receiver.Id, out var socket))
+            if (!_socketManager.IsExist(receiver.Id))
             {
                 return false;
             }
@@ -205,5 +129,7 @@ namespace InfrastructureShare.Services
             _queueManager.PushToQueue(standardMessage);
             return true;
         }
+
+
     }
 }
