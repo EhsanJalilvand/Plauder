@@ -94,9 +94,9 @@ namespace InfrastructureShare.Services
                     return false;
                 }
             });
-
+            KeepLive();
         }
-        public void KeepLive()
+        private void KeepLive()
         {
             while (!_token.IsCancellationRequested)
             {

@@ -9,7 +9,6 @@ namespace Server.Application.Services
     public interface IServerService
     {
         void StartService(Action<bool> callBackResult);
-        void KeepLive();
         void StopService();
     }
 }
