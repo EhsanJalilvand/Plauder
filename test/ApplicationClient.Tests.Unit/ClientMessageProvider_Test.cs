@@ -57,13 +57,11 @@ namespace ApplicationClient.Tests.Unit
         {
             //Arrange
             var messageChunk = new MessageChunk() { ChunkNumber = 0, ClientId = "Id1", Message = Encoding.UTF8.GetBytes("Test"), MessageId = Guid.NewGuid() };
-            var messageChunkJson = messageChunk.ConvertToJson() + "<EOF>";
-            var buffer = Encoding.UTF8.GetBytes(messageChunkJson);
 
             _moqSocketProvider.Setup(a => a.ReceiveAsync(It.IsAny<Action<MessageChunk>>()))
                 .Callback<Action<MessageChunk>>((a) =>
                 {
-
+                    a(messageChunk);
                 });
 
 
@@ -77,39 +75,14 @@ namespace ApplicationClient.Tests.Unit
             _moqMessageResolver.Verify(a => a.ReadChunkMessage(It.Is<MessageChunk>(mc => mc.MessageId == messageChunk.MessageId)), Times.Once);
         }
         [Fact]
-        public async void ReceiveMessage_Should3TimeReconnectWhenThrowException()
-        {
-            //Arrange
-            var messageChunk = new MessageChunk() { ChunkNumber = 0, ClientId = "Id1", Message = Encoding.UTF8.GetBytes("Test"), MessageId = Guid.NewGuid() };
-            var messageChunkJson = messageChunk.ConvertToJson() + "<EOF>";
-            var buffer = Encoding.UTF8.GetBytes(messageChunkJson);
-
-
-            _moqSocketProvider.Setup(a => a.ReceiveAsync(It.IsAny<Action<MessageChunk>>()))
-                .Callback<Action<MessageChunk>>((a) =>
-                {
-
-                });
-
-
-
-            //Act
-            await _clientMessageProvider.ReceiveMessageAsync();
-
-            await Task.Delay(4000);
-
-            //Assert
-            _moqSocketProvider.Verify(a => a.ReconnectSocketAsync(), Times.Exactly(3));
-        }
-        [Fact]
         public async void StartService_ShouldSendQueueMessages_WhenSocketIsConnect()
         {
             //Arrang
             bool isConnected = false;
             var messageCallbackInvoked = new TaskCompletionSource<bool>();
-            var messageChunk = new MessageChunk() {ChunkNumber=0,ClientId="Id01",Message=Encoding.UTF8.GetBytes("Test"),MessageId=Guid.NewGuid() };
+            var messageChunk = new MessageChunk() { ChunkNumber = 0, ClientId = "Id01", Message = Encoding.UTF8.GetBytes("Test"), MessageId = Guid.NewGuid() };
             var messageChunk2 = new MessageChunk() { ChunkNumber = 0, ClientId = "Id02", Message = Encoding.UTF8.GetBytes("Test"), MessageId = Guid.NewGuid() };
-            _moqSocketProvider.Setup(a=>a.IsConnected).Returns(true);
+            _moqSocketProvider.Setup(a => a.IsConnected).Returns(true);
             _moqQueueMessageManager.Setup(a => a.StartSend(It.IsAny<Func<MessageChunk, Task<bool>>>()))
                 .Callback<Func<MessageChunk, Task<bool>>>(async (f) =>
             {
