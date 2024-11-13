@@ -14,6 +14,9 @@ namespace InfrastructureShare.Services
     {
         private readonly ConcurrentQueue<MessageChunk> senderMessageQueues = new ConcurrentQueue<MessageChunk>();
         private readonly IMessageChunker _messageChunker;
+
+        public long MessageChunkCount => senderMessageQueues.Count;
+
         public MessageQueueManager(IMessageChunker messageChunker)
         {
             _messageChunker = messageChunker;
@@ -24,9 +27,9 @@ namespace InfrastructureShare.Services
             {
                 while (true)
                 {
-                    senderMessageQueues.TryPeek(out var _messageChunker);
-                    if(_messageChunker != null)
-                    if (await func(_messageChunker))
+                    senderMessageQueues.TryPeek(out var _messageChunk);
+                    if(_messageChunk != null)
+                    if (await func(_messageChunk))
                         senderMessageQueues.TryDequeue(out var _);
                 }
             });

@@ -1,5 +1,6 @@
 ﻿using ChatClient.ViewModels;
 using Client.Application.Services;
+using Client.InfrastructureClient;
 using DomainShare.Settings;
 using InfrastructureClient.Services;
 using Microsoft.Extensions.Configuration;
@@ -38,8 +39,8 @@ namespace ChatClient
             builder.Services.AddSingleton<AppShell>();
             builder.Services.AddSingleton<MainPage>();
             builder.Services.AddSingleton<MainViewModel>();
-            builder.Services.AddSingleton<IClientService, ClientService>();
             builder.Services.RegisterSharedServices();
+            builder.Services.RegisterServices();
             builder.Services.AddSingleton<MainViewModel>();
             builder.Configuration.GetSection("Server").Bind(serverSetting);
             builder.Services.Configure<ServerSetting>(option => { option.Ip = serverSetting.Ip; option.Port = serverSetting.Port;option.ChunkSize = serverSetting.ChunkSize; });

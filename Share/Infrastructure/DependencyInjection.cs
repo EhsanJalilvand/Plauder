@@ -1,8 +1,6 @@
 ﻿using ApplicationShare.Services;
 using InfrastructureShare.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Share.Application.Services;
-using Share.Infrastructure.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +13,12 @@ namespace Share.Infrastructure
     {
         public static IServiceCollection RegisterSharedServices(this IServiceCollection services)
         {
-            services.AddSingleton<IServerMessageProvider, ServerMessageProvider>();
-            services.AddSingleton<IClientMessageProvider, ClientMessageProvider>();
+
             services.AddSingleton<IMessageChunker, MessageChunker>();
             services.AddSingleton<IMessageQueueManager, MessageQueueManager>();
             services.AddSingleton<IMessageResolver, MessageResolver>();
+          
+           
             return services;
         }
 

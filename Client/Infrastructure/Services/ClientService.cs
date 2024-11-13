@@ -4,7 +4,6 @@ using DomainShare.Enums;
 using DomainShare.Models;
 using DomainShare.Settings;
 using Microsoft.Extensions.Options;
-using Share.Application.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +29,7 @@ namespace InfrastructureClient.Services
 
         private void InitializeConnection(Action connected, Action<MessageContract> messageCallback)
         {
-            _messageProvider.Initialize(async () =>
+            _messageProvider.StartService(async () =>
             {
                 connected();
                 StartReceivingMessages(messageCallback);
@@ -40,7 +39,7 @@ namespace InfrastructureClient.Services
 
         private void StartReceivingMessages(Action<MessageContract> messageCallback)
         {
-            _messageResolver.StartRecieve(async (MessageContract a) =>
+            _messageResolver.ResolveMessages(async (MessageContract a) =>
             {
                 messageCallback(a);
                 return true;
@@ -54,7 +53,7 @@ namespace InfrastructureClient.Services
         }
         public async Task<bool> RegisterClient(ContactInfo contactInfo)
         {
-            if (contactInfo == null || string.IsNullOrEmpty(contactInfo.UserName) || string.IsNullOrEmpty(contactInfo.Id))
+            if (contactInfo == null || string.IsNullOrEmpty(contactInfo.UserName))
                 throw new InvalidOperationException("Contact Is Not Valid");
             await _messageProvider.SendMessage(contactInfo, contactInfo.UserName, MessageType.NotifyOnline);
             return true;

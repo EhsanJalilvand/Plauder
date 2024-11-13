@@ -8,6 +8,8 @@ namespace Server.Application.Services
 {
     public interface IServerService
     {
-        Task StartService();
+        void StartService(Action<bool> callBackResult);
+        void KeepLive();
+        void StopService();
     }
 }

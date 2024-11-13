@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Server.Application.Services;
-using Server.Infrastructure.Services;
+using Server.InfrastructureServer;
 using Share.Infrastructure;
 
 
@@ -15,12 +15,13 @@ var config=builder.Build();
 
 
 var serviceProvider = new ServiceCollection()
-           .AddSingleton<IServerService, ServerService>()
            .Configure<ServerSetting>(config.GetSection("Server"))
            .AddMemoryCache()
            .RegisterSharedServices()
+           .RegisterServices()
            .BuildServiceProvider();
 
 
 var service= serviceProvider.GetService<IServerService>();
-await service.StartService();
+service.StartService((a) => { });
+service.KeepLive();

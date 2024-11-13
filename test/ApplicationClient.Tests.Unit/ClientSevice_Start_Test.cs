@@ -6,7 +6,6 @@ using FluentAssertions;
 using InfrastructureClient.Services;
 using Microsoft.Extensions.Options;
 using Moq;
-using Share.Application.Services;
 using Tynamix.ObjectFiller;
 namespace ApplicationClient.Tests.Unit
 {
@@ -34,7 +33,7 @@ namespace ApplicationClient.Tests.Unit
             var messageCallbackInvoked = new TaskCompletionSource<bool>();
             var messageContract = new MessageContract { Message = "Test Message" };
 
-            _mockMessageProvider.Setup(mp => mp.Initialize(It.IsAny<Action>()))
+            _mockMessageProvider.Setup(mp => mp.StartService(It.IsAny<Action>()))
                                     .Callback<Action>(onConnect =>
                                     {
                                         onConnect();
@@ -43,7 +42,7 @@ namespace ApplicationClient.Tests.Unit
 
 
 
-            _mockMessageResolver.Setup(mr => mr.StartRecieve(It.IsAny<Func<MessageContract, Task<bool>>>()))
+            _mockMessageResolver.Setup(mr => mr.ResolveMessages(It.IsAny<Func<MessageContract, Task<bool>>>()))
                                 .Callback<Func<MessageContract, Task<bool>>>(async callback =>
                                 {
                                     await callback(messageContract);
@@ -61,8 +60,8 @@ namespace ApplicationClient.Tests.Unit
 
             //Assert
 
-            _mockMessageProvider.Verify(mp => mp.Initialize(It.IsAny<Action>()), Times.Once);
-            _mockMessageResolver.Verify(mr => mr.StartRecieve(It.IsAny<Func<MessageContract, Task<bool>>>()), Times.Once);
+            _mockMessageProvider.Verify(mp => mp.StartService(It.IsAny<Action>()), Times.Once);
+            _mockMessageResolver.Verify(mr => mr.ResolveMessages(It.IsAny<Func<MessageContract, Task<bool>>>()), Times.Once);
             _mockMessageProvider.Verify(mp => mp.ReceiveMessageAsync(), Times.Once);
             connected.Should().BeTrue();
             isMessageRecieve.Should().BeTrue();
@@ -72,7 +71,7 @@ namespace ApplicationClient.Tests.Unit
         {
             //Arrange
             bool connectedOrMessageCallback = false;
-            _mockMessageProvider.Setup(a => a.Initialize(It.IsAny<Action>())).Callback<Action>(onConnect => onConnect()).Throws(new Exception("Initialize Fail"));
+            _mockMessageProvider.Setup(a => a.StartService(It.IsAny<Action>())).Callback<Action>(onConnect => onConnect()).Throws(new Exception("Initialize Fail"));
 
             //Act
             _clientService.Start(() => { connectedOrMessageCallback = true; }, (messageCallback) => { connectedOrMessageCallback = true; });
@@ -89,12 +88,12 @@ namespace ApplicationClient.Tests.Unit
             var onConnectCallback =new TaskCompletionSource<bool>();
 
 
-            _mockMessageProvider.Setup(a => a.Initialize(It.IsAny<Action>())).Callback<Action>(onConnect =>
+            _mockMessageProvider.Setup(a => a.StartService(It.IsAny<Action>())).Callback<Action>(onConnect =>
             {
                 onConnect();
                 onConnectCallback.SetResult(true);
             });
-            _mockMessageResolver.Setup(a => a.StartRecieve(It.IsAny<Func<MessageContract, Task<bool>>>())).Throws(new Exception("StartRecieve Failed"));
+            _mockMessageResolver.Setup(a => a.ResolveMessages(It.IsAny<Func<MessageContract, Task<bool>>>())).Throws(new Exception("StartRecieve Failed"));
             //Act
             _clientService.Start(() => { }, (messageContract) => {
                 messageRecieved = true;

@@ -17,6 +17,9 @@ namespace InfrastructureShare.Services
         {
             _messageChunker = messageChunker;
         }
+
+        public long MessageCount => _chunkMessages.Count;
+
         public void ReadChunkMessage(MessageChunk chunk)
         {
             _chunkMessages.AddOrUpdate(chunk.MessageId,
@@ -29,9 +32,9 @@ namespace InfrastructureShare.Services
 
         }
 
-        public void StartRecieve(Func<MessageContract, Task<bool>> func)
+        public void ResolveMessages(Func<MessageContract, Task<bool>> func)
         {
-            Task.Factory.StartNew(async () =>
+            Task.Factory.StartNew(async() =>
             {
                 while (true)
                 {
@@ -53,8 +56,8 @@ namespace InfrastructureShare.Services
                     {
                         _chunkMessages.TryRemove(key, out _);
                     }
+                    await Task.Delay(100);
                 }
-
             });
         }
     }

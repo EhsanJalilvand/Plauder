@@ -11,5 +11,6 @@ namespace ApplicationShare.Services
     {
         void StartSend(Func<MessageChunk, Task<bool>> func);
         void PushToQueue(MessageContract messageContract);
+        public long MessageChunkCount { get; }
     }
 }
