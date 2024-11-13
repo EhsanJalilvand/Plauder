@@ -17,14 +17,14 @@ namespace ApplicationShare.Tests.Unit
         private readonly IServerMessageProvider _serverMessageProvider;
         private readonly Mock<IMessageQueueManager> _moqQueueManager;
         private readonly Mock<IMessageResolver> _moqMessageResolver;
-        private readonly Mock<ISocketProvider> _moqSoketProvider;
+        private readonly Mock<ISocketServerProvider> _moqSoketProvider;
         private readonly Mock<ISocketManager> _moqSoketManager;
         public ServerMessageProvider_Test(DataFixture dataFixture)
         {
             this.dataFixture = dataFixture;
             _moqQueueManager = new Mock<IMessageQueueManager>();
             _moqMessageResolver = new Mock<IMessageResolver>();
-            _moqSoketProvider = new Mock<ISocketProvider>();
+            _moqSoketProvider = new Mock<ISocketServerProvider>();
             _moqSoketManager=new Mock<ISocketManager>();
             _serverMessageProvider = new ServerMessageProvider(dataFixture.ServerSettingOption, _moqQueueManager.Object, _moqMessageResolver.Object, _moqSoketProvider.Object, _moqSoketManager.Object);
         }
@@ -36,9 +36,7 @@ namespace ApplicationShare.Tests.Unit
             MessageChunk mc2 = new MessageChunk() { ChunkNumber = 4, RecieverId = "Id1", Message = Encoding.UTF8.GetBytes("Test2"), MessageId = Guid.NewGuid() };
             MessageChunk mc3 = new MessageChunk() { ChunkNumber = 1, RecieverId = "Id2", Message = Encoding.UTF8.GetBytes("Test3"), MessageId = Guid.NewGuid() };
 
-            _moqSoketManager.Setup(a => a.TrySocket(It.Is<string>(a => a.Contains("Id")))).Returns(true);
-
-
+            _moqSoketManager.Setup(a => a.TrySocket(It.IsAny<string>())).Returns(true);
             _moqQueueManager.Setup(a => a.StartSend(It.IsAny<Func<MessageChunk, Task<bool>>>()))
                 .Callback<Func<MessageChunk, Task<bool>>>(async (f) =>
                 {
@@ -52,8 +50,24 @@ namespace ApplicationShare.Tests.Unit
             //Act
             _serverMessageProvider.SendQueueMessagesToClients();
             //Assert
-            _moqSoketProvider.Verify(a => a.SendAsync(It.IsAny<Socket>(),It.IsAny<ArraySegment<byte>>(), SocketFlags.None), Times.Exactly(3));
+            _moqSoketProvider.Verify(a => a.SendAsync(It.IsAny<string>(),It.IsAny<MessageChunk>()), Times.Exactly(3));
         }
 
+        //[Fact]
+        //public void ListenMessageAsync_ShouldReadChunkMessage()
+        //{
+        //    //Arrang
+        //    var s1 = _moqSoketManager;
+        //    _moqSoketProvider.Setup(a => a.ListenAsync(It.IsAny<Action<Socket, string>>())).Callback<Action<Socket, string>>((action) =>
+        //    {
+        //        action()
+        //    });
+
+        //    //Act
+        //    _serverMessageProvider.ListenMessageAsync();
+
+
+        //    //Assert
+        //}
     }
 }

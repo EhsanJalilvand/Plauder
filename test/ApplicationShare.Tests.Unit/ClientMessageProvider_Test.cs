@@ -19,13 +19,13 @@ namespace ApplicationShare.Tests.Unit
         private readonly IClientMessageProvider _clientMessageProvider;
         private readonly Mock<IMessageQueueManager> _moqQueueMessageManager;
         private readonly Mock<IMessageResolver> _moqMessageResolver;
-        private readonly Mock<ISocketProvider> _moqSocketProvider;
+        private readonly Mock<ISocketClientProvider> _moqSocketProvider;
         public ClientMessageProvider_Test(DataFixture dataFixture)
         {
             _dataFixture = dataFixture;
             _moqQueueMessageManager = new Mock<IMessageQueueManager>();
             _moqMessageResolver = new Mock<IMessageResolver>();
-            _moqSocketProvider = new Mock<ISocketProvider>();
+            _moqSocketProvider = new Mock<ISocketClientProvider>();
             _clientMessageProvider = new ClientMessageProvider(_dataFixture.ServerSettingOption, _moqQueueMessageManager.Object, _moqMessageResolver.Object, _moqSocketProvider.Object);
         }
         [Fact]
@@ -58,12 +58,10 @@ namespace ApplicationShare.Tests.Unit
             var messageChunkJson = messageChunk.ConvertToJson() + "<EOF>";
             var buffer = Encoding.UTF8.GetBytes(messageChunkJson);
 
-            _moqSocketProvider.Setup(a => a.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), SocketFlags.None))
-                .ReturnsAsync(buffer.Length)
-                .Callback((ArraySegment<byte> b, SocketFlags f) =>
+            _moqSocketProvider.Setup(a => a.ReceiveAsync(It.IsAny<Action<MessageChunk>>()))
+                .Callback<Action<MessageChunk>>((a) =>
                 {
-                    Array.Copy(buffer, b.Array, buffer.Length);
-                    _moqSocketProvider.Setup(a => a.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), SocketFlags.None)).ReturnsAsync(0);
+
                 });
 
 
@@ -85,11 +83,10 @@ namespace ApplicationShare.Tests.Unit
             var buffer = Encoding.UTF8.GetBytes(messageChunkJson);
 
 
-            _moqSocketProvider.Setup(a => a.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), SocketFlags.None))
-                .ReturnsAsync(buffer.Length)
-                .Callback((ArraySegment<byte> b, SocketFlags f) =>
+            _moqSocketProvider.Setup(a => a.ReceiveAsync(It.IsAny<Action<MessageChunk>>()))
+                .Callback<Action<MessageChunk>>((a) =>
                 {
-                    throw new SocketException();
+
                 });
 
 
@@ -126,7 +123,7 @@ namespace ApplicationShare.Tests.Unit
             await messageCallbackInvoked.Task;
             //Assert
             isConnected.Should().BeTrue();
-            _moqSocketProvider.Verify(a => a.SendAsync(It.IsAny<ArraySegment<byte>>(),SocketFlags.None), Times.Exactly(2));
+            _moqSocketProvider.Verify(a => a.SendAsync(It.IsAny<MessageChunk>()), Times.Exactly(2));
         }
 
     }

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net;
-using System.Net.Sockets;
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Options;
 using System.Xml.Linq;
@@ -24,9 +23,9 @@ namespace InfrastructureShare.Services
         private readonly ServerSetting _serverSetting;
         private readonly IMessageQueueManager _queueManager;
         private readonly IMessageResolver _messageResolver;
-        private readonly ISocketProvider _socketProvider;
+        private readonly ISocketServerProvider _socketProvider;
         private readonly ISocketManager _socketManager;
-        public ServerMessageProvider(IOptions<ServerSetting> option, IMessageQueueManager queueManager, IMessageResolver messageResolver, ISocketProvider socketProvider, ISocketManager socketManager)
+        public ServerMessageProvider(IOptions<ServerSetting> option, IMessageQueueManager queueManager, IMessageResolver messageResolver, ISocketServerProvider socketProvider, ISocketManager socketManager)
         {
             _serverSetting = option.Value;
             _queueManager = queueManager;
@@ -42,14 +41,7 @@ namespace InfrastructureShare.Services
                 {
                     if (!_socketManager.TrySocket(a.RecieverId))
                         return false;
-                    var message = JsonSerializer.Serialize(a) + "<EOF>";
-                    byte[] binaryChunk = Encoding.UTF8.GetBytes(message);
-                    var socket = _socketManager.FindSocket(a.RecieverId);
-                    await _socketProvider.SendAsync(socket, new ArraySegment<byte>(binaryChunk), SocketFlags.None);
-                }
-                catch (SocketException)
-                {
-                    return false;
+                    await _socketProvider.SendAsync(a.RecieverId,a);
                 }
                 catch (Exception ex)
                 {
@@ -64,56 +56,11 @@ namespace InfrastructureShare.Services
         }
         public Task ListenMessageAsync()
         {
-            _socketProvider.ListenAsync((clientSocket, clientId) =>
+            _socketProvider.ListenAsync((chunkMessage) =>
             {
-
-               if(_socketManager.AddSocket(clientSocket, clientId));
-                Task.Run(() => HandleClient(clientSocket, clientId));
+                _messageResolver.ReadChunkMessage(chunkMessage);
             });
             return Task.CompletedTask;
-        }
-        private async Task HandleClient(Socket client, string clientId)
-        {
-            byte[] buffer = new byte[_serverSetting.ChunkSize];
-            StringBuilder data = new StringBuilder();
-            try
-            {
-                while (_socketManager.IsExist(clientId))
-                {
-                    try
-                    {
-                        int numByte = await client.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
-                        if (numByte == 0) break;
-
-                        data.Append(Encoding.UTF8.GetString(buffer, 0, numByte));
-                        var messageText = data.ToString();
-                        if (!messageText.EndsWith("<EOF>"))
-                            continue;
-                        var messages = messageText.Split("<EOF>");
-                        foreach (var message in messages)
-                        {
-                            if (string.IsNullOrEmpty(message)) continue;
-                            var chunkMessage = message.ConvertToObject<MessageChunk>();
-                            chunkMessage.ClientId = clientId;
-                            _messageResolver.ReadChunkMessage(chunkMessage);
-                        }
-                        data.Clear();
-                    }
-                    catch (SocketException)
-                    {
-                        break;
-                    }
-                }
-                client.Close();
-            }
-            catch (Exception ex)
-            {
-
-            }
-            finally
-            {
-                _socketManager.RemoveSocket(clientId);
-            }
         }
         public async Task<bool> RemoveClientSession(ContactInfo sender)
         {
