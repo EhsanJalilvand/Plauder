@@ -1,4 +1,5 @@
 ﻿using ApplicationShare.Services;
+using Client.Application.Services;
 using DomainShare.Models;
 using DomainShare.Settings;
 using Microsoft.Extensions.Options;
@@ -12,7 +13,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace InfrastructureShare.Services
+namespace InfrastructureClient.Services
 {
     public class SocketClientProvider : ISocketClientProvider
     {

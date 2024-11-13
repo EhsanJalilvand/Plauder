@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ApplicationClient.Tests.Unit
+namespace ApplicationServer.Tests.Unit
 {
     public class DataFixture : IDisposable
     {

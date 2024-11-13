@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ApplicationShare.Services
+namespace Client.Application.Services
 {
     public interface IClientMessageProvider
     {

@@ -12,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Server.Infrastructure.Services
+namespace InfrastructureShare.Services
 {
     public class ServerService : IServerService
     {

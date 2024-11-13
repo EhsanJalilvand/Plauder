@@ -1,7 +1,9 @@
 ﻿using ApplicationShare.Services;
+using Client.Application.Services;
 using DomainShare.Enums;
 using DomainShare.Models;
 using FluentAssertions;
+using InfrastructureClient.Services;
 using InfrastructureShare.Services;
 using Moq;
 using System;
@@ -11,7 +13,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ApplicationShare.Tests.Unit
+namespace ApplicationClient.Tests.Unit
 {
     public class ClientMessageProvider_Test : IClassFixture<DataFixture>
     {

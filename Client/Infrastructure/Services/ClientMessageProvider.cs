@@ -8,8 +8,9 @@ using System;
 using ApplicationShare.Services;
 using System.Text.Json;
 using System.Net.Sockets;
+using Client.Application.Services;
 
-namespace InfrastructureShare.Services
+namespace InfrastructureClient.Services
 {
     public class ClientMessageProvider : IClientMessageProvider
     {

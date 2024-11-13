@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ApplicationShare.Services
+namespace Client.Application.Services
 {
     public interface ISocketClientProvider
     {

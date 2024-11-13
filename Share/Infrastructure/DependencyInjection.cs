@@ -13,14 +13,12 @@ namespace Share.Infrastructure
     {
         public static IServiceCollection RegisterSharedServices(this IServiceCollection services)
         {
-            services.AddSingleton<IServerMessageProvider, ServerMessageProvider>();
-            services.AddSingleton<IClientMessageProvider, ClientMessageProvider>();
+
             services.AddSingleton<IMessageChunker, MessageChunker>();
             services.AddSingleton<IMessageQueueManager, MessageQueueManager>();
             services.AddSingleton<IMessageResolver, MessageResolver>();
-            services.AddSingleton<ISocketServerProvider, SocketServerProvider>();
-            services.AddSingleton<ISocketClientProvider, SocketClientProvider>();
-            services.AddSingleton<ISocketManager, SocketManager>();
+          
+           
             return services;
         }
 
