@@ -9,8 +9,9 @@ namespace Share.Tests.Builder
     {
         public static IOptions<ServerSetting> Build()
         {
+            var randomPort= new Random().Next(9000,14000);
             var serverSetting = new Mock<IOptions<ServerSetting>>();
-            serverSetting.Setup(s=>s.Value).Returns(new ServerSetting() { Ip="127.0.0.1", Port=11256,ChunkSize=1024});
+            serverSetting.Setup(s=>s.Value).Returns(new ServerSetting() { Ip="127.0.0.1", Port= randomPort, ChunkSize=1024});
             return serverSetting.Object;
         }
 

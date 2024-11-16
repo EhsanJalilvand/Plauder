@@ -9,14 +9,15 @@ using System.Text;
 using System.Threading.Tasks;
 using Server.InfrastructureServer;
 using Share.Infrastructure;
+using ApplicationShare.Services;
+using InfrastructureShare.Services;
 namespace Share.Tests.Builder
 {
     public static class ServerBuilder
     {
-        public static IServerService Build()
+        public static IServerService Build(ServerSetting config, Action<IMessageResolver> messageResolverCallback,Action<IServerMessageProvider> serverMessageProviderCallback)
         {
 
-            var config= ServerSettingBuilder.Build().Value;
             var serviceProvider = new ServiceCollection()
                        .Configure<ServerSetting>((a) =>
                        {
@@ -31,7 +32,10 @@ namespace Share.Tests.Builder
 
 
             var service = serviceProvider.GetService<IServerService>();
-
+            var messageResolver=serviceProvider.GetService<IMessageResolver>();
+            var serverMessageProvider = serviceProvider.GetService<IServerMessageProvider>();
+            messageResolverCallback(messageResolver);
+            serverMessageProviderCallback(serverMessageProvider);    
             return service;
         }
     }

@@ -1,4 +1,5 @@
-﻿using Client.Application.Services;
+﻿using ApplicationShare.Services;
+using Client.Application.Services;
 using Client.InfrastructureClient;
 using DomainShare.Settings;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,10 +15,9 @@ namespace Share.Tests.Builder
 {
     public static class ClientBuilder
     {
-        public static IClientService Build()
+        public static IClientService Build(ServerSetting config, Action<IMessageResolver> clientMessageResolverCallback)
         {
 
-            var config = ServerSettingBuilder.Build().Value;
             var serviceProvider = new ServiceCollection()
                        .Configure<ServerSetting>((a) =>
                        {
@@ -32,7 +32,8 @@ namespace Share.Tests.Builder
 
 
             var service = serviceProvider.GetService<IClientService>();
-
+            var clientMessageResolver = serviceProvider.GetService<IMessageResolver>();
+            clientMessageResolverCallback(clientMessageResolver);
             return service;
         }
     }
