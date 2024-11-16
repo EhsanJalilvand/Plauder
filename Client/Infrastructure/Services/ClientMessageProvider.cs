@@ -44,10 +44,7 @@ namespace InfrastructureClient.Services
                     await _socketProvider.ReconnectSocketAsync();
                     return false;
                 }
-
                 return true;
-
-
             });
         }
         public async Task ReceiveMessageAsync()

@@ -6,10 +6,16 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
     <PackageReference Include="Moq" Version="4.20.72" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Client\Application\ApplicationClient.csproj" />
+    <ProjectReference Include="..\..\Client\Infrastructure\InfrastructureClient.csproj" />
+    <ProjectReference Include="..\..\Server\Application\ApplicationServer.csproj" />
+    <ProjectReference Include="..\..\Server\Infrastructure\InfrastructureServer.csproj" />
     <ProjectReference Include="..\..\Share\DomainShare\DomainShare.csproj" />
   </ItemGroup>
 </Project>
