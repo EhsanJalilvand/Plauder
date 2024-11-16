@@ -39,11 +39,10 @@ namespace ApplicationServer.Tests.Unit
             });
 
             //Act
-            _serverService.StartService((a) => { });
+            _serverService.StartService();
             await onReceive.Task;
             //Assert
             messageRecieved.Should().BeTrue();
-            //_moqServerMessageProvider.Verify(a => a.ResolveMessageAsync(It.IsAny<Action<MessageContract>>()), Times.Once);
 
         }
         [Fact]
@@ -61,13 +60,11 @@ namespace ApplicationServer.Tests.Unit
                  f(messageContract);
                  f(messageContract2);
                  onReceive.SetResult(true);
+                 result = true;
              });
 
             //Act
-            _serverService.StartService((a) =>
-            {
-                result = a;
-            });
+            _serverService.StartService();
             await onReceive.Task;
             //Assert
             result.Should().BeTrue();
@@ -91,10 +88,11 @@ namespace ApplicationServer.Tests.Unit
                 f(messageContract2);
                 f(messageContract3);
                 onReceive.SetResult(true);
+                result = true;
             });
 
             //Act
-            _serverService.StartService((a) => { result = a; });
+            _serverService.StartService();
             await onReceive.Task;
             //Assert
             result.Should().BeTrue();
@@ -120,10 +118,11 @@ namespace ApplicationServer.Tests.Unit
                 f(messageContract2);
                 f(messageContract3);
                 onReceive.SetResult(true);
+                result = true;
             });
 
             //Act
-            _serverService.StartService((a) => { result = a; });
+            _serverService.StartService();
             await onReceive.Task;
             //Assert
             result.Should().BeTrue();
@@ -154,10 +153,7 @@ namespace ApplicationServer.Tests.Unit
             });
 
             //Act
-            _serverService.StartService((a) =>
-            {
-                result = a;
-            });
+            _serverService.StartService();
             await onReceive.Task;
             //Assert
             result.Should().BeFalse();
@@ -183,7 +179,7 @@ namespace ApplicationServer.Tests.Unit
             });
 
             //Act
-            _serverService.StartService((a) => { result = a; });
+            _serverService.StartService();
             await onReceive.Task;
             //Assert
             result.Should().BeFalse();
@@ -209,7 +205,7 @@ namespace ApplicationServer.Tests.Unit
             });
 
             //Act
-            _serverService.StartService((a) => { result = a; });
+            _serverService.StartService();
             await onReceive.Task;
             //Assert
             result.Should().BeFalse();

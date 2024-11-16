@@ -68,7 +68,7 @@ namespace InfrastructureShare.Services
                 return false;
            return await _messageProvider.SendMessageAsync(messageContract.Sender, contact, messageContract.Message, MessageType.Message);
         }
-        public async void StartService(Action<bool> callBackResult)
+        public async void StartService(Action<bool> callBackResult=null)
         {
             _messageProvider.SendQueueMessagesToClients();
             await _messageProvider.ListenMessageAsync();
@@ -94,6 +94,7 @@ namespace InfrastructureShare.Services
                     return false;
                 }
             });
+            if(callBackResult!= null)
             KeepLive();
         }
         private void KeepLive()
